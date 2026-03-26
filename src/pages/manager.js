@@ -17,7 +17,7 @@ const questions = [
     question:
       "3. Энэ байдал хэр удаан хугацаанд, ямар давтамжтай үргэлжилж байна вэ?",
   },
-  { id: 4, question: "4. Дээрэлхэлт голчлон хаана болдог вэ?" },
+  { id: 4, question: "4. Дээрэлхэлт голчлон хаана болдог vэ?" },
   { id: 5, question: "5. Чамд хэн хамгийн их дарамт үзүүлдэг вэ?" },
   { id: 6, question: "6. Чи энэ талаар хэн нэгэнд итгэж ярьж байсан уу?" },
   { id: 7, question: "7. Тэдний хандлага ямар байсан бэ?" },
@@ -33,12 +33,12 @@ const questions = [
   },
 ];
 
-// "Бүх хэлбэрүүд"-ийг хассан жагсаалт
 const types = ["Бүгд", "Үг хэлээр", "Бие махбодиор", "Цахимаар"];
 
 export default function Manager() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Илгээж буй төлөв
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
   const [filterStatus, setFilterStatus] = useState("Бүгд");
@@ -53,7 +53,6 @@ export default function Manager() {
       const res = await fetch("/api/huselt");
       const d = await res.json();
       if (d.success) {
-        // Огноогоор эрэмбэлэх (Шинэ нь дээрээ)
         const sortedData = (d.data || []).sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
@@ -78,15 +77,26 @@ export default function Manager() {
 
   const handleResolve = async (id) => {
     if (!reply) return alert("Хариу бичнэ үү.");
-    const res = await fetch("/api/huselt", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "Шийдвэрлэсэн", adminReply: reply }),
-    });
-    if (res.ok) {
-      fetchData();
-      setSelectedItem(null);
-      setReply("");
+
+    setIsSubmitting(true); // Уншиж эхэллээ
+    try {
+      const res = await fetch("/api/huselt", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "Шийдвэрлэсэн", adminReply: reply }),
+      });
+      if (res.ok) {
+        alert("Амжилттай илгээгдлээ! ✅");
+        fetchData();
+        setSelectedItem(null);
+        setReply("");
+      } else {
+        alert("Алдаа гарлаа.");
+      }
+    } catch (err) {
+      alert("Сервертэй холбогдож чадсангүй.");
+    } finally {
+      setIsSubmitting(false); // Уншиж дууслаа
     }
   };
 
@@ -112,7 +122,7 @@ export default function Manager() {
           onSubmit={handleLogin}
           className="bg-white p-8 rounded-[2.5rem] shadow-xl max-w-sm w-full border border-slate-100 text-center"
         >
-          <h1 className="text-xl font-black mb-6 italic uppercase tracking-widest">
+          <h1 className="text-xl font-black mb-6 italic uppercase tracking-widest text-slate-800">
             Admin Access
           </h1>
           <input
@@ -132,7 +142,6 @@ export default function Manager() {
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 sm:p-8 font-sans text-slate-900">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <header className="flex justify-between items-center mb-8 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
           <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter">
             Manager{" "}
@@ -148,7 +157,6 @@ export default function Manager() {
 
         {/* Шүүлтүүрүүд */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          {/* Төлөв */}
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
               Төлөв:
@@ -166,7 +174,6 @@ export default function Manager() {
             </div>
           </div>
 
-          {/* Төрөл Dropdown */}
           <div className="flex items-center gap-3 relative">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
               Төрөл:
@@ -183,7 +190,6 @@ export default function Manager() {
                   ▼
                 </span>
               </button>
-
               {isTypeOpen && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   {types.map((t) => (
@@ -212,7 +218,6 @@ export default function Manager() {
             </span>
           </div>
 
-          {/* Desktop Table */}
           <table className="w-full text-left border-collapse hidden sm:table text-sm">
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr>
@@ -328,16 +333,10 @@ export default function Manager() {
                   </div>
                 ))}
           </div>
-
-          {!loading && filteredData.length === 0 && (
-            <div className="p-20 text-center font-black text-slate-300 uppercase text-xs tracking-widest">
-              Мэдээлэл олдсонгүй
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Modal хэсэг хэвээрээ */}
+      {/* Modal */}
       {selectedItem && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-2xl h-[92vh] sm:h-auto sm:max-h-[90vh] rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in duration-300">
@@ -413,9 +412,17 @@ export default function Manager() {
                       />
                       <button
                         onClick={() => handleResolve(selectedItem.customId)}
-                        className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg"
+                        disabled={isSubmitting}
+                        className={`w-full py-5 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? "bg-slate-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]"}`}
                       >
-                        ХАРИУ ИЛГЭЭХ
+                        {isSubmitting ? (
+                          <>
+                            <span className="animate-spin text-lg">⏳</span>
+                            Илгээж байна...
+                          </>
+                        ) : (
+                          "ХАРИУ ИЛГЭЭХ"
+                        )}
                       </button>
                     </div>
                   )}
