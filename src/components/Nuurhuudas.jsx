@@ -9,134 +9,195 @@ export default function Nuurhuudas() {
   ];
 
   return (
-    <div className="bg-[#FFFFFF] text-[#1A1A1A] font-sans">
-      <section className="max-w-7xl mx-auto px-6 pt-12 pb-20 grid md:grid-cols-2 gap-10 items-center">
-        <div className="order-2 md:order-1">
-          <h1 className="text-4xl md:text-5xl font-black leading-tight text-[#2D4999]">
-            Чи ганцаараа биш. <br />
-            Бид чамайг <span className="text-[#F79434]">сонсоход</span> бэлэн.
+    <div className="bg-[#FFFFFF] text-[#1A1A1A] font-sans selection:bg-[#F79434]/30">
+      {/* --- HERO SECTION --- */}
+      <section className="relative max-w-7xl mx-auto px-6 pt-20 pb-24 grid md:grid-cols-2 gap-12 items-center overflow-hidden">
+        <div className="absolute top-0 -left-20 w-72 h-72 bg-[#2D4999] opacity-[0.03] rounded-full blur-3xl"></div>
+
+        <div className="relative z-10 order-2 md:order-1">
+          <span className="inline-block py-1 px-4 rounded-full bg-[#2D4999]/10 text-[#2D4999] text-sm font-bold mb-6">
+            Бид хамтдаа хүчтэй 🤝
+          </span>
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] text-[#2D4999]">
+            Чи ганцаараа <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2D4999] to-[#F79434]">
+              биш.
+            </span>
           </h1>
-          <p className="mt-6 text-lg text-gray-600 max-w-md">
+          <p className="mt-8 text-xl text-gray-500 leading-relaxed max-w-lg">
             Дээрэлхэлтийн эсрэг нэгдэж, бие биедээ тусалъя. Тусламж авах нь
             хамгийн зөв бөгөөд зоригтой алхам юм.
           </p>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-12 flex flex-wrap gap-5">
             <Link
               href="/asuult"
-              className="bg-[#2D4999] text-white px-10 py-4 rounded-full font-bold shadow-md hover:bg-[#1e326b] transition-all"
+              className="group relative bg-[#2D4999] text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-indigo-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
             >
               Тусламж хүсэх
+              <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></span>
             </Link>
             <Link
               href="#learn-more"
-              className="border-2 border-gray-200 text-gray-600 px-10 py-4 rounded-full font-bold hover:bg-gray-50 transition-all"
+              className="bg-white border-2 border-gray-100 text-gray-600 px-10 py-4 rounded-2xl font-bold hover:bg-gray-50 hover:border-gray-200 transition-all duration-300"
             >
               Мэдээлэл авах
             </Link>
           </div>
         </div>
 
-        <div className="order-1 md:order-2">
-          <div className="relative p-4">
-            <div className="absolute inset-0 bg-[#F79434] rounded-[2rem] rotate-3 -z-10 opacity-10"></div>
+        <div className="order-1 md:order-2 relative group">
+          <div className="absolute -inset-4 bg-gradient-to-tr from-[#F79434] to-[#2D4999] rounded-[2.5rem] opacity-20 blur-2xl group-hover:opacity-30 transition duration-1000"></div>
+          <div className="relative bg-white p-3 rounded-[2.5rem] shadow-2xl overflow-hidden">
             <img
               src="https://cccp.gov.mn/images/content/fc6e0f71b6eba7f6034b4fd9ab5974d8.png"
               alt="Together"
-              className="w-full rounded-[2rem] border-2 border-[#2D4999]/10"
+              className="w-full h-full object-cover rounded-[2rem] transform group-hover:scale-105 transition duration-700"
             />
           </div>
         </div>
       </section>
-      <section id="learn-more" className="bg-[#F9FAFB] py-20">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold border-l-8 border-[#F79434] pl-6 text-[#2D4999]">
+
+      {/* --- INFO SECTION --- */}
+      <section id="learn-more" className="bg-[#F8FAFC] py-24">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#2D4999] mb-6">
               Дээрэлхэлт гэж юу вэ?
             </h2>
-            <p className="mt-6 text-xl leading-relaxed text-gray-700 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              Энэ бол хэн нэгнийг санаатайгаар, давтан үйлдлээр гомдоох, айлгах,
-              гадуурхах үйлдэл юм. Үүнд үг хэлээр доромжлох, бие махбодод
-              халдах, цахимаар дарамтлах зэрэг бүх хэлбэр орно.
+            <div className="w-24 h-1.5 bg-[#F79434] mx-auto rounded-full mb-8"></div>
+            <p className="max-w-3xl mx-auto text-lg leading-relaxed text-gray-600 italic">
+              "Энэ бол хэн нэгнийг санаатайгаар, давтан үйлдлээр гомдоох,
+              айлгах, гадуурхах үйлдэл юм. Үүнд бие махбод болон сэтгэл санааны
+              бүх дарамт орно."
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white p-8 rounded-2xl border-b-4 border-[#F79434] shadow-sm">
-              <span className="text-3xl">🗣️</span>
-              <h3 className="font-bold text-lg mt-4 mb-2">Сэтгэлзүйн</h3>
-              <p className="text-sm text-gray-500">
-                Доромжлох, гадуурхах, худлаа цуу яриа тараах.
-              </p>
-            </div>
-            <div className="bg-white p-8 rounded-2xl border-b-4 border-[#2D4999] shadow-sm">
-              <span className="text-3xl">👊</span>
-              <h3 className="font-bold text-lg mt-4 mb-2">Бие махбодын</h3>
-              <p className="text-sm text-gray-500">
-                Цохих, түлхэх, эд зүйлсийг нь эвдэх.
-              </p>
-            </div>
-            <div className="bg-white p-8 rounded-2xl border-b-4 border-[#5AC8FA] shadow-sm">
-              <span className="text-3xl">📱</span>
-              <h3 className="font-bold text-lg mt-4 mb-2">Цахим</h3>
-              <p className="text-sm text-gray-500">
-                Сошиал сувгаар дарамтлах, нууц задрах.
-              </p>
-            </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Сэтгэлзүйн",
+                desc: "Доромжлох, гадуурхах, худлаа цуу яриа тараах.",
+                icon: "🗣️",
+                color: "border-[#F79434]",
+              },
+              {
+                title: "Бие махбодын",
+                desc: "Цохих, түлхэх, эд зүйлсийг нь эвдэх.",
+                icon: "👊",
+                color: "border-[#2D4999]",
+              },
+              {
+                title: "Цахим",
+                desc: "Сошиал сувгаар дарамтлах, нууц задрах.",
+                icon: "📱",
+                color: "border-[#5AC8FA]",
+              },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                className={`bg-white p-10 rounded-[2rem] border-t-8 ${item.color} shadow-sm hover:shadow-xl transition-shadow duration-300`}
+              >
+                <span className="text-4xl mb-6 block">{item.icon}</span>
+                <h3 className="font-bold text-xl mb-3 text-[#2D4999]">
+                  {item.title}
+                </h3>
+                <p className="text-gray-500 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-      <section className="py-20 max-w-4xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center mb-12 text-[#2D4999]">
-          Анхаарах шинжүүд
+
+      {/* --- SYMPTOMS SECTION --- */}
+      <section className="py-24 max-w-5xl mx-auto px-6 text-center">
+        <h2 className="text-3xl font-bold mb-16 text-[#2D4999]">
+          Анхаарах шинж тэмдгүүд
         </h2>
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-6">
           {symptoms.map((s, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
+              className="flex items-center gap-5 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-[#F79434]/50 transition-colors"
             >
-              <div className="w-3 h-3 bg-[#F79434] rounded-full"></div>
-              <span className="font-medium text-gray-700">{s}</span>
+              <div className="flex-shrink-0 w-10 h-10 bg-[#F79434]/10 rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-[#F79434] rounded-full"></div>
+              </div>
+              <span className="font-semibold text-gray-700 text-left">{s}</span>
             </div>
           ))}
         </div>
       </section>
 
       {/* --- ACTION CARDS --- */}
-      <section className="bg-[#2D4999] py-20 px-6">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 text-white">
-          <div className="bg-white/10 backdrop-blur-sm p-10 rounded-[2rem] border border-white/20">
-            <h3 className="text-2xl font-bold mb-6">Хэрэв чи өртсөн бол:</h3>
-            <ul className="space-y-4 opacity-90">
-              <li>• Итгэдэг хүндээ заавал хэлээрэй.</li>
-              <li>• Өөрийгөө битгий буруутга.</li>
-              <li>• Ганцаараа битгий бай.</li>
+      <section className="bg-gradient-to-br from-[#2D4999] to-[#1e326b] py-24 px-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
+          <div className="bg-white/10 backdrop-blur-md p-12 rounded-[2.5rem] border border-white/20 hover:bg-white/[0.15] transition-colors">
+            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3 text-white">
+              <span className="w-8 h-1 bg-[#F79434] inline-block"></span> Хэрэв
+              чи өртсөн бол:
+            </h3>
+            <ul className="space-y-5 text-lg">
+              {[
+                "Итгэдэг хүндээ заавал хэлээрэй.",
+                "Өөрийгөө битгий буруутга.",
+                "Ганцаараа битгий бай.",
+              ].map((text, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 opacity-90 text-white"
+                >
+                  <span className="text-[#F79434]">✓</span> {text}
+                </li>
+              ))}
             </ul>
           </div>
-          <div className="bg-[#F79434] p-10 rounded-[2rem] shadow-xl">
-            <h3 className="text-2xl font-bold mb-6 text-white">
-              Хэрэв чи харсан бол:
+
+          <div className="bg-gradient-to-br from-[#F79434] to-[#ffab5a] p-12 rounded-[2.5rem] shadow-2xl transform md:scale-105 transition-transform hover:scale-[1.07]">
+            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3 text-white">
+              <span className="w-8 h-1 bg-white inline-block"></span> Хэрэв чи
+              харсан бол:
             </h3>
-            <ul className="space-y-4 text-white/90 font-medium">
-              <li>• Үл тоож болохгүй.</li>
-              <li>• Найзыгаа дэмжиж хамт бай.</li>
-              <li>• Багш, эцэг эхэд мэдэгд.</li>
+            <ul className="space-y-5 text-lg">
+              {[
+                "Үл тоож болохгүй.",
+                "Найзыгаа дэмжиж хамт бай.",
+                "Багш, эцэг эхэд мэдэгд.",
+              ].map((text, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 text-white font-medium"
+                >
+                  <span>●</span> {text}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
       </section>
-      <footer className="py-12 text-center border-t border-gray-100">
-        <p className="font-bold text-[#2D4999]">Anti-Bullying Platform</p>
-        <p className="mt-2 text-sm text-gray-400">
-          © 2026. Бүх эрх хуулиар хамгаалагдсан.
-        </p>
-        <div className="mt-6 flex justify-center gap-6 text-xs font-bold text-gray-500">
-          <Link href="/asuult" className="hover:text-[#F79434]">
-            ТУСЛАМЖ АВАХ
-          </Link>
-          <Link href="/profile" className="hover:text-[#F79434]">
-            ПРОФАЙЛ
-          </Link>
+
+      {/* --- FOOTER --- */}
+      <footer className="py-16 text-center">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-12"></div>
+          <p className="font-black text-2xl text-[#2D4999] tracking-tight">
+            Anti-Bullying
+          </p>
+          <p className="mt-4 text-gray-400 text-sm">
+            © 2026. Сайн үйлс бүхэн дэлгэрэх болтугай.
+          </p>
+          <div className="mt-8 flex justify-center gap-10">
+            {["ТУСЛАМЖ АВАХ", "ПРОФАЙЛ", "МЭДЭЭЛЭЛ"].map((item) => (
+              <Link
+                key={item}
+                href="#"
+                className="text-xs font-black tracking-widest text-gray-500 hover:text-[#2D4999] transition-colors"
+              >
+                {item}
+              </Link>
+            ))}
+          </div>
         </div>
       </footer>
     </div>
