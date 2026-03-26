@@ -11,7 +11,7 @@ export default function Nav() {
         <Link href="/" className="flex items-center gap-4 group">
           <div className="relative">
             <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUoo6qrbl67f3Yn3DZxmJfiKXPqInuzwOAjQ&s"
+              src="https://i.ibb.co/Mk24pLXk/Screenshot-2026-03-26-at-20-40-20.png"
               alt="Logo"
               className="w-11 h-11 rounded-2xl object-cover border-2 border-indigo-600 transition-transform group-hover:rotate-6 shadow-sm"
             />

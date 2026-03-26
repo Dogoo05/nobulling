@@ -58,7 +58,7 @@ const questions = [
   },
   {
     id: 10,
-    question: "10. Юу хамгийн чухал хэрэгцээ байна вэ?",
+    question: "10. Яг одоо таны хувьд юу хамгийн чухал хэрэгцээ байна вэ?",
     options: ["❤️ Хайр халамж", "💡 Зөвлөгөө", "💪 Итгэл", "👂 Сонсох хүн"],
   },
 ];
@@ -72,7 +72,6 @@ export default function HuseltPage() {
   const [searchId, setSearchId] = useState("");
   const [searchResult, setSearchResult] = useState(null);
 
-  // Зургийг автоматаар шахаж Base64 болгох
   const processImage = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -98,10 +97,7 @@ export default function HuseltPage() {
     if (!questions.every((q) => answers[q.id]))
       return alert("Бүх асуултыг бөглөнө үү!");
     setLoading(true);
-
-    const now = new Date();
-    const id = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
+    const id = `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     try {
       const imgData = file ? await processImage(file) : "";
       const res = await fetch("/api/huselt", {
@@ -133,13 +129,15 @@ export default function HuseltPage() {
 
   if (submittedId)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="bg-white p-10 rounded-[3rem] shadow-xl text-center max-w-md w-full border border-green-100">
-          <div className="text-5xl mb-6">✅</div>
-          <h2 className="text-2xl font-black mb-2">Амжилттай!</h2>
-          <p className="text-slate-500 mb-8 font-bold">Таны нууц код:</p>
-          <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-indigo-200 mb-8">
-            <code className="text-2xl font-black text-indigo-600 tracking-widest">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-xl text-center max-w-sm w-full border border-green-100">
+          <div className="text-4xl mb-4">✅</div>
+          <h2 className="text-xl font-black mb-2 text-slate-900">Амжилттай!</h2>
+          <p className="text-slate-500 mb-6 font-bold text-sm">
+            Таны нууц код:
+          </p>
+          <div className="bg-slate-50 p-4 rounded-xl border-2 border-dashed border-indigo-200 mb-6">
+            <code className="text-xl font-black text-indigo-600 tracking-wider block">
               {submittedId}
             </code>
             <button
@@ -147,14 +145,14 @@ export default function HuseltPage() {
                 navigator.clipboard.writeText(submittedId);
                 alert("Хуулагдлаа!");
               }}
-              className="block mx-auto mt-4 text-[10px] bg-indigo-600 text-white px-4 py-2 rounded-lg font-black"
+              className="mt-3 text-[10px] bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-black uppercase"
             >
-              📋 КОД ХУУЛАХ
+              📋 Код хуулах
             </button>
           </div>
           <button
             onClick={() => setSubmittedId("")}
-            className="w-full py-4 bg-slate-900 text-white rounded-xl font-black"
+            className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-sm"
           >
             ХААХ
           </button>
@@ -163,36 +161,36 @@ export default function HuseltPage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] py-12 px-4">
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* Хариу шалгах хэсэг */}
-        <div className="bg-indigo-900 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-xl">
-          <h2 className="text-lg font-black mb-4 uppercase tracking-widest text-center sm:text-left">
+    <div className="min-h-screen bg-[#f8fafc] py-6 px-4">
+      <div className="max-w-xl mx-auto space-y-4">
+        {/* Хариу шалгах - Илүү цэгцтэй */}
+        <div className="bg-indigo-900 rounded-[1.5rem] p-5 text-white shadow-lg">
+          <h2 className="text-xs font-black mb-3 uppercase tracking-widest opacity-80">
             Хариу шалгах
           </h2>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex gap-2">
             <input
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
-              placeholder="ID кодоо оруулна уу..."
-              className="flex-1 p-4 rounded-2xl bg-white/10 border-none text-white placeholder:text-white/30 font-bold outline-none text-center sm:text-left"
+              placeholder="ID код..."
+              className="flex-1 p-3 rounded-xl bg-white/10 border-none text-white placeholder:text-white/30 font-bold outline-none text-sm"
             />
             <button
               onClick={handleSearch}
-              className="bg-white text-indigo-900 px-8 py-4 sm:py-0 rounded-2xl font-black text-sm active:scale-95 transition-all"
+              className="bg-white text-indigo-900 px-5 py-3 rounded-xl font-black text-xs active:scale-95 transition-all"
             >
               ШАЛГАХ
             </button>
           </div>
           {searchResult && (
-            <div className="mt-6 p-6 bg-white rounded-3xl text-slate-900 animate-in fade-in">
-              <div className="flex justify-between items-center mb-4 text-[10px] font-black">
-                <span className="text-slate-400">ТӨЛӨВ:</span>
-                <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full">
+            <div className="mt-4 p-4 bg-white rounded-2xl text-slate-900 animate-in fade-in">
+              <div className="flex justify-between items-center mb-2 text-[10px] font-black">
+                <span className="text-slate-400 uppercase">Төлөв:</span>
+                <span className="bg-green-100 text-green-600 px-2 py-0.5 rounded-md">
                   {searchResult.status}
                 </span>
               </div>
-              <div className="bg-slate-50 p-4 rounded-xl font-bold text-slate-700 italic border border-slate-100">
+              <div className="bg-slate-50 p-3 rounded-lg font-bold text-slate-700 italic border border-slate-100 text-xs">
                 {searchResult.adminReply ||
                   "Багш хараахан хариу бичээгүй байна."}
               </div>
@@ -200,24 +198,24 @@ export default function HuseltPage() {
           )}
         </div>
 
-        <h1 className="text-4xl font-black text-center text-slate-900 italic">
+        <h1 className="text-2xl font-black text-center text-slate-900 italic py-2">
           СЭТГЭЛ <span className="text-indigo-600">ЗҮЙ</span>
         </h1>
 
         {questions.map((q) => (
           <div
             key={q.id}
-            className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-slate-100"
+            className="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100"
           >
-            <h3 className="text-lg font-black text-slate-800 mb-6">
+            <h3 className="text-sm font-black text-slate-800 mb-4">
               {q.question}
             </h3>
-            <div className="grid gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {q.options.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => setAnswers({ ...answers, [q.id]: opt })}
-                  className={`p-4 rounded-xl text-left font-bold transition-all border-2 ${answers[q.id] === opt ? "border-indigo-600 bg-indigo-50 text-indigo-900" : "border-slate-50 text-slate-500 hover:border-indigo-50"}`}
+                  className={`p-3 rounded-xl text-xs font-bold transition-all border-2 ${answers[q.id] === opt ? "border-indigo-600 bg-indigo-50 text-indigo-900" : "border-slate-50 text-slate-500 hover:border-indigo-100"}`}
                 >
                   {opt}
                 </button>
@@ -226,24 +224,27 @@ export default function HuseltPage() {
           </div>
         ))}
 
-        {/* Нэмэлт мэдээлэл */}
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 space-y-6">
+        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 space-y-4">
           <div>
-            <h3 className="text-lg font-black mb-4">Дэлгэрэнгүй тайлбар</h3>
+            <h3 className="text-xs font-black mb-2 text-slate-400 uppercase tracking-wider">
+              Дэлгэрэнгүй тайлбар
+            </h3>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-32 p-4 bg-slate-50 rounded-xl border-none outline-none font-medium resize-none"
+              className="w-full h-24 p-3 bg-slate-50 rounded-xl border-none outline-none text-sm font-medium resize-none"
               placeholder="Бичээрэй..."
             ></textarea>
           </div>
           <div>
-            <h3 className="text-lg font-black mb-4">Зураг хавсаргах</h3>
+            <h3 className="text-xs font-black mb-2 text-slate-400 uppercase tracking-wider">
+              Зураг хавсаргах
+            </h3>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setFile(e.target.files[0])}
-              className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-slate-900 file:text-white"
+              className="w-full text-[10px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-slate-900 file:text-white"
             />
           </div>
         </div>
@@ -251,9 +252,9 @@ export default function HuseltPage() {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-xl shadow-xl hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
+          className="w-full py-4 bg-indigo-600 text-white rounded-[1.5rem] font-black text-lg shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
         >
-          {loading ? "ИЛГЭЭЖ БАЙНА..." : "ХҮСЭЛТ ИЛГЭЭХ"}
+          {loading ? "УНШИЖ БАЙНА..." : "ХҮСЭЛТ ИЛГЭЭХ"}
         </button>
       </div>
     </div>
