@@ -169,38 +169,70 @@ export default function Manager() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((item) => (
-                <tr
-                  key={item.customId}
-                  onClick={() => {
-                    setSelectedItem(item);
-                    setReply(item.adminReply || "");
-                  }}
-                  className="border-b border-slate-50 hover:bg-slate-50/80 cursor-pointer transition-colors group"
-                >
-                  <td className="p-5 font-black text-slate-700">
-                    {item.customId}
-                  </td>
-                  <td className="p-5">
-                    <span
-                      className={`px-3 py-1 rounded-full text-[9px] font-black uppercase ${item.status === "Шийдвэрлэсэн" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="p-5 text-xs text-slate-400 font-bold">
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="p-5 text-right">
-                    <button
-                      onClick={(e) => handleDelete(e, item.customId)}
-                      className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                    >
-                      🗑️
-                    </button>
+              {loading ? (
+                // Уншиж байх үед харагдах 5 мөр "Skeleton" эффект
+                [...Array(5)].map((_, i) => (
+                  <tr
+                    key={i}
+                    className="animate-pulse border-b border-slate-50"
+                  >
+                    <td className="p-5">
+                      <div className="h-4 bg-slate-100 rounded w-24"></div>
+                    </td>
+                    <td className="p-5">
+                      <div className="h-6 bg-slate-100 rounded-full w-20"></div>
+                    </td>
+                    <td className="p-5">
+                      <div className="h-4 bg-slate-100 rounded w-16"></div>
+                    </td>
+                    <td className="p-5 text-right">
+                      <div className="h-4 bg-slate-100 rounded w-6 ml-auto"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredData.length > 0 ? (
+                filteredData.map((item) => (
+                  <tr
+                    key={item.customId}
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setReply(item.adminReply || "");
+                    }}
+                    className="border-b border-slate-50 hover:bg-slate-50/80 cursor-pointer transition-colors group"
+                  >
+                    <td className="p-5 font-black text-slate-700">
+                      {item.customId}
+                    </td>
+                    <td className="p-5">
+                      <span
+                        className={`px-3 py-1 rounded-full text-[9px] font-black uppercase ${item.status === "Шийдвэрлэсэн" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="p-5 text-xs text-slate-400 font-bold">
+                      {new Date(item.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="p-5 text-right">
+                      <button
+                        onClick={(e) => handleDelete(e, item.customId)}
+                        className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="p-20 text-center font-black text-slate-300 uppercase text-xs"
+                  >
+                    Мэдээлэл олдсонгүй
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
           {filteredData.length === 0 && (
