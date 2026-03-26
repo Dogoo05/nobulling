@@ -9,6 +9,7 @@ const questions = [
       "👊 Бие махбодиор",
       "📱 Цахимаар",
       "🔄 Бүх хэлбэрүүд",
+      "🚨 ЯАРАЛТАЙ ТУСЛАМЖ", // Шинээр нэмэгдсэн
     ],
   },
   {
@@ -18,7 +19,7 @@ const questions = [
   },
   {
     id: 3,
-    question: "3. Давтамж нь ямар вэ?",
+    question: "3. Давтамж нь ямар vэ?",
     options: ["Хэдхэн хоног", "Хэдэн сарын турш", "Нэг жилээс дээш"],
   },
   {
@@ -63,17 +64,26 @@ const questions = [
   },
 ];
 
-export default function HuseltPage() {
+export default function Asuult() {
   const [answers, setAnswers] = useState({});
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submittedId, setSubmittedId] = useState("");
   const [searchId, setSearchId] = useState("");
   const [searchResult, setSearchResult] = useState(null);
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
+    }
+  };
+
   const processImage = (file) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (e) => {
@@ -81,180 +91,266 @@ export default function HuseltPage() {
         img.src = e.target.result;
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 1000;
+          const MAX_WIDTH = 800;
           const scaleSize = MAX_WIDTH / img.width;
           canvas.width = MAX_WIDTH;
           canvas.height = img.height * scaleSize;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL("image/jpeg", 0.7));
+          resolve(canvas.toDataURL("image/jpeg", 0.6));
         };
+        img.onerror = reject;
       };
+      reader.onerror = reject;
     });
   };
 
   const handleSubmit = async () => {
-    if (!questions.every((q) => answers[q.id]))
-      return alert("Бүх асуултыг бөглөнө үү!");
+    if (Object.keys(answers).length < questions.length) {
+      return alert("Бүх асуултад хариулна уу.");
+    }
+
     setLoading(true);
-    const id = `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+    // 1. Огноог авах (YYYYMMDD формат)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const dateStr = `${year}${month}${day}`;
+
+    // 2. Санамсаргүй 4 тэмдэгт үүсгэх
+    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    // 3. SOS эсэхийг шалгах
+    const isUrgent = answers[1] === "🚨 ЯАРАЛТАЙ ТУСЛАМЖ";
+
+    // 4. Эцсийн ID үүсгэх: SOS-20260327-ABCD эсвэл 20260327-ABCD
+    const finalId = isUrgent
+      ? `SOS-${dateStr}-${randomPart}`
+      : `${dateStr}-${randomPart}`;
+
     try {
-      const imgData = file ? await processImage(file) : "";
+      let imgData = "";
+      if (file) {
+        imgData = await processImage(file);
+      }
+
       const res = await fetch("/api/huselt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customId: id,
+          customId: finalId, // Шинэ форматыг илгээнэ
           answers,
           description,
           imageUrl: imgData,
         }),
       });
+
       const data = await res.json();
-      if (data.success) setSubmittedId(id);
+      if (data.success) {
+        setSubmittedId(finalId);
+      } else {
+        alert("Алдаа гарлаа: " + (data.error || "Дахин оролдоно уу"));
+      }
     } catch (e) {
-      alert("Алдаа гарлаа.");
+      alert("Сервертэй холбогдоход алдаа гарлаа.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSearch = async () => {
-    if (!searchId) return;
-    const res = await fetch(`/api/huselt?id=${searchId.trim().toUpperCase()}`);
-    const data = await res.json();
-    if (data.success) setSearchResult(data.data);
-    else alert("Мэдээлэл олдсонгүй.");
+    const cleanId = searchId.trim().toUpperCase();
+    if (!cleanId) return;
+    try {
+      const res = await fetch(`/api/huselt?id=${cleanId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setSearchResult(data.data);
+      } else {
+        alert("Код олдсонгүй эсвэл буруу байна.");
+        setSearchResult(null);
+      }
+    } catch (e) {
+      alert("Хайлт хийхэд алдаа гарлаа.");
+    }
   };
 
-  if (submittedId)
+  if (submittedId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-xl text-center max-w-sm w-full border border-green-100">
-          <div className="text-4xl mb-4">✅</div>
-          <h2 className="text-xl font-black mb-2 text-slate-900">Амжилттай!</h2>
-          <p className="text-slate-500 mb-6 font-bold text-sm">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="bg-white p-8 rounded-[3rem] shadow-2xl text-center max-w-sm w-full border border-green-100 animate-in zoom-in duration-300">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-6">
+            ✅
+          </div>
+          <h2 className="text-2xl font-black mb-2 text-slate-900 uppercase italic">
+            Илгээгдлээ!
+          </h2>
+          <p className="text-slate-400 mb-2 font-bold text-[10px] uppercase tracking-widest">
             Таны нууц код:
           </p>
-          <div className="bg-slate-50 p-4 rounded-xl border-2 border-dashed border-indigo-200 mb-6">
-            <code className="text-xl font-black text-indigo-600 tracking-wider block">
+          <div
+            className={`p-6 rounded-3xl border-2 border-dashed mb-8 ${submittedId.startsWith("SOS") ? "bg-red-50 border-red-200" : "bg-slate-50 border-indigo-200"}`}
+          >
+            <code
+              className={`text-2xl font-black tracking-widest block ${submittedId.startsWith("SOS") ? "text-red-600" : "text-indigo-600"}`}
+            >
               {submittedId}
             </code>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(submittedId);
-                alert("Хуулагдлаа!");
-              }}
-              className="mt-3 text-[10px] bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-black uppercase"
-            >
-              📋 Код хуулах
-            </button>
           </div>
           <button
-            onClick={() => setSubmittedId("")}
-            className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-sm"
+            onClick={() => {
+              navigator.clipboard.writeText(submittedId);
+              alert("Код хуулагдлаа!");
+            }}
+            className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest mb-3"
           >
-            ХААХ
+            📋 Код хуулах
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest"
+          >
+            Хаах
           </button>
         </div>
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] py-6 px-4">
-      <div className="max-w-xl mx-auto space-y-4">
-        {/* Хариу шалгах - Илүү цэгцтэй */}
-        <div className="bg-indigo-900 rounded-[1.5rem] p-5 text-white shadow-lg">
-          <h2 className="text-xs font-black mb-3 uppercase tracking-widest opacity-80">
-            Хариу шалгах
+    <div className="min-h-screen bg-[#f8fafc] py-10 px-4 font-sans text-slate-900">
+      <div className="max-w-xl mx-auto space-y-6 pb-20">
+        {/* ХАРИУ ШАЛГАХ */}
+        <div className="bg-indigo-900 rounded-[2.5rem] p-7 text-white shadow-2xl">
+          <h2 className="text-[10px] font-black mb-4 uppercase tracking-[0.2em] opacity-60">
+            Нууц кодоор хариу шалгах
           </h2>
           <div className="flex gap-2">
             <input
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
-              placeholder="ID код..."
-              className="flex-1 p-3 rounded-xl bg-white/10 border-none text-white placeholder:text-white/30 font-bold outline-none text-sm"
+              placeholder="ID-ABCDE"
+              className="flex-1 p-4 rounded-2xl bg-white/10 border-none text-white text-sm outline-none placeholder:text-white/30"
             />
             <button
               onClick={handleSearch}
-              className="bg-white text-indigo-900 px-5 py-3 rounded-xl font-black text-xs active:scale-95 transition-all"
+              className="bg-white text-indigo-900 px-6 py-4 rounded-2xl font-black text-[10px] uppercase active:scale-95 transition-transform"
             >
               ШАЛГАХ
             </button>
           </div>
           {searchResult && (
-            <div className="mt-4 p-4 bg-white rounded-2xl text-slate-900 animate-in fade-in">
-              <div className="flex justify-between items-center mb-2 text-[10px] font-black">
-                <span className="text-slate-400 uppercase">Төлөв:</span>
-                <span className="bg-green-100 text-green-600 px-2 py-0.5 rounded-md">
-                  {searchResult.status}
-                </span>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-lg font-bold text-slate-700 italic border border-slate-100 text-xs">
+            <div className="mt-8 bg-white p-6 rounded-[2rem] text-slate-900 animate-in slide-in-from-top-4 duration-500">
+              <span
+                className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase mb-4 inline-block ${searchResult.status === "Шийдвэрлэсэн" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}
+              >
+                {searchResult.status || "Хүлээгдэж буй"}
+              </span>
+              <p className="text-sm font-bold italic text-slate-700">
                 {searchResult.adminReply ||
                   "Багш хараахан хариу бичээгүй байна."}
-              </div>
+              </p>
+              <button
+                onClick={() => setSearchResult(null)}
+                className="mt-4 text-[9px] font-black text-slate-300 uppercase block"
+              >
+                × Хаах
+              </button>
             </div>
           )}
         </div>
 
-        <h1 className="text-2xl font-black text-center text-slate-900 italic py-2">
-          СЭТГЭЛ <span className="text-indigo-600">ЗҮЙ</span>
-        </h1>
+        <div className="text-center py-6">
+          <h1 className="text-3xl font-black text-slate-900 italic tracking-tighter uppercase">
+            Сэтгэл <span className="text-indigo-600 underline">зүй</span>
+          </h1>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
+            Тусламж хүсэх анкет
+          </p>
+        </div>
 
-        {questions.map((q) => (
-          <div
-            key={q.id}
-            className="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100"
-          >
-            <h3 className="text-sm font-black text-slate-800 mb-4">
-              {q.question}
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {q.options.map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setAnswers({ ...answers, [q.id]: opt })}
-                  className={`p-3 rounded-xl text-xs font-bold transition-all border-2 ${answers[q.id] === opt ? "border-indigo-600 bg-indigo-50 text-indigo-900" : "border-slate-50 text-slate-500 hover:border-indigo-100"}`}
-                >
-                  {opt}
-                </button>
-              ))}
+        {/* АСУУЛГУУД */}
+        <div className="space-y-4">
+          {questions.map((q) => (
+            <div
+              key={q.id}
+              className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm"
+            >
+              <h3 className="text-sm font-black text-slate-800 mb-5 leading-tight">
+                {q.question}
+              </h3>
+              <div className="grid grid-cols-1 gap-2">
+                {q.options.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => setAnswers({ ...answers, [q.id]: opt })}
+                    className={`p-4 rounded-2xl text-xs font-black transition-all border-2 text-left flex justify-between items-center ${answers[q.id] === opt ? (opt.includes("🚨") ? "border-red-500 bg-red-50 text-red-900" : "border-indigo-600 bg-indigo-50 text-indigo-900") : "border-slate-50 text-slate-500 hover:border-indigo-100"}`}
+                  >
+                    {opt}
+                    {answers[q.id] === opt && (
+                      <span
+                        className={
+                          opt.includes("🚨")
+                            ? "text-red-600"
+                            : "text-indigo-600"
+                        }
+                      >
+                        ●
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
-        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 space-y-4">
-          <div>
-            <h3 className="text-xs font-black mb-2 text-slate-400 uppercase tracking-wider">
-              Дэлгэрэнгүй тайлбар
-            </h3>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-24 p-3 bg-slate-50 rounded-xl border-none outline-none text-sm font-medium resize-none"
-              placeholder="Бичээрэй..."
-            ></textarea>
-          </div>
-          <div>
-            <h3 className="text-xs font-black mb-2 text-slate-400 uppercase tracking-wider">
-              Зураг хавсаргах
-            </h3>
+        <div className="bg-white p-7 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full h-32 p-5 bg-slate-50 rounded-[1.5rem] border-none outline-none text-sm font-bold resize-none focus:ring-2 ring-indigo-50"
+            placeholder="Нэмэлт тайлбар (заавал биш)..."
+          />
+          <div className="space-y-4">
+            <p className="text-[9px] font-black text-slate-400 uppercase ml-2">
+              Зураг хавсаргах (заавал биш)
+            </p>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files[0])}
-              className="w-full text-[10px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-slate-900 file:text-white"
+              onChange={handleFileChange}
+              className="w-full text-[10px] text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:bg-slate-900 file:text-white file:font-black cursor-pointer"
             />
+            {preview && (
+              <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-slate-100">
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => {
+                    setFile(null);
+                    setPreview(null);
+                  }}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-[10px]"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full py-4 bg-indigo-600 text-white rounded-[1.5rem] font-black text-lg shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
+          className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
         >
-          {loading ? "УНШИЖ БАЙНА..." : "ХҮСЭЛТ ИЛГЭЭХ"}
+          {loading ? "ИЛГЭЭЖ БАЙНА..." : "ХҮСЭЛТ ИЛГЭЭХ"}
         </button>
       </div>
     </div>

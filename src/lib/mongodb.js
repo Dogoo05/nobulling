@@ -1,31 +1,22 @@
-import "server-only";
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
-const options = {
-  maxPoolSize: 10,
-};
+const options = {};
 
-if (!uri) {
-  throw new Error("❌ .env.local файлдаа MONGODB_URI тохируул!");
-}
+let client;
+let clientPromise;
 
-// global cache (TypeScript биш тул safe байдлаар)
-let cached = global._mongo;
+if (!uri) throw new Error("MONGODB_URI тохируулаагүй байна!");
 
-if (!cached) {
-  cached = global._mongo = { client: null, promise: null };
-}
-
-export async function getDatabase() {
-  if (!cached.promise) {
-    const client = new MongoClient(uri, options);
-    cached.promise = client.connect();
+if (process.env.NODE_ENV === "development") {
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect();
   }
-
-  cached.client = await cached.promise;
-
-  return cached.client.db(); // default DB
+  clientPromise = global._mongoClientPromise;
+} else {
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
 }
 
-export default getDatabase;
+export default clientPromise;

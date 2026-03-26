@@ -8,6 +8,7 @@ export default function Nav() {
     <nav className="bg-white/80 backdrop-blur-md border-b border-indigo-100 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
         {/* Logo Section */}
+
         <Link href="/" className="flex items-center gap-4 group">
           <div className="relative">
             <img
