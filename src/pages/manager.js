@@ -268,15 +268,16 @@ export default function Manager() {
       </div>
 
       {/* Modal View */}
+      {/* Modal View */}
       {selectedItem && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md">
           <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-300">
             <header className="p-8 border-b flex justify-between items-center bg-white sticky top-0 z-10">
               <div>
-                <h2 className="text-xl font-black uppercase italic tracking-tighter">
+                <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-800">
                   Хүсэлтийн <span className="text-indigo-600">Дэлгэрэнгүй</span>
                 </h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                   ID: {selectedItem.customId}
                 </p>
               </div>
@@ -289,54 +290,72 @@ export default function Manager() {
             </header>
 
             <div className="overflow-y-auto flex-1 p-8 space-y-8">
-              {/* ЯАРАЛТАЙ ТАЙЛБАР ХЭСЭГ - ЭНД ХАРАГДАНА */}
-              {selectedItem.answers?.[8] && (
-                <div className="p-8 bg-red-50 border-2 border-red-100 rounded-[2.5rem] relative overflow-hidden group">
-                  <div className="absolute -right-4 -top-4 text-red-100 text-6xl font-black opacity-20 pointer-events-none group-hover:scale-110 transition-transform italic">
-                    SOS
+              {/* ХЭРЭГЛЭГЧИЙН БИЧСЭН ТАЙЛБАР (description) */}
+              {selectedItem.description ? (
+                <div className="p-8 bg-indigo-50 border-2 border-indigo-100 rounded-[2.5rem] relative overflow-hidden group">
+                  <div className="absolute -right-4 -top-4 text-indigo-200 text-6xl font-black opacity-20 italic select-none pointer-events-none">
+                    MESSAGE
                   </div>
-                  <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>{" "}
-                    ХЭРЭГЛЭГЧИЙН ТАЙЛБАР:
+                  <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+                    Дэлгэрэнгүй тайлбар:
                   </h4>
-                  <p className="text-lg font-black text-slate-800 leading-relaxed italic">
-                    "{selectedItem.answers[8]}"
+                  <p className="text-lg font-bold text-slate-800 leading-relaxed italic relative z-10">
+                    "{selectedItem.description}"
                   </p>
+                </div>
+              ) : (
+                <div className="p-6 bg-slate-50 rounded-[2rem] text-center border border-dashed border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Нэмэлт тайлбар бичээгүй байна
                 </div>
               )}
 
-              {/* Бусад асуулгууд */}
-              <div className="space-y-4">
+              {/* ХАВСАРГАСАН ЗУРАГ (Хэрэв байгаа бол) */}
+              {selectedItem.imageUrl && (
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4">
+                    Хавсаргасан зураг:
+                  </h4>
+                  <div className="rounded-[2.5rem] overflow-hidden border-4 border-white shadow-xl bg-slate-100">
+                    <img
+                      src={selectedItem.imageUrl}
+                      alt="Evidence"
+                      className="w-full h-auto max-h-[500px] object-contain mx-auto"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Асуулгын хариултууд - Одоо бүх асуулт харагдана */}
+              <div className="space-y-4 pt-4">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4">
-                  Бөглөсөн асуулга:
+                  Асуулгын хариултууд:
                 </h4>
-                <div className="grid gap-3">
-                  {questions
-                    .filter((q) => q.id !== 8)
-                    .map((q) => (
-                      <div
-                        key={q.id}
-                        className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex flex-col gap-1"
-                      >
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                          {q.question}
-                        </p>
-                        <p className="text-sm font-black text-indigo-900 uppercase">
-                          {selectedItem.answers?.[q.id] || "—"}
-                        </p>
-                      </div>
-                    ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {questions.map((q) => (
+                    <div
+                      key={q.id}
+                      className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-1"
+                    >
+                      <p className="text-[9px] font-bold text-slate-400 uppercase leading-tight">
+                        {q.question}
+                      </p>
+                      <p className="text-xs font-black text-indigo-600 uppercase">
+                        {selectedItem.answers?.[q.id] || "—"}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Хариу бичих хэсэг */}
-              <div className="pt-8 border-t border-slate-100">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 text-center">
+              <div className="pt-10 border-t border-slate-100">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 text-center text-slate-400 italic">
                   Шийдвэрлэлт ба Хариу
                 </h4>
                 {selectedItem.status === "Шийдвэрлэсэн" ? (
-                  <div className="p-8 bg-green-50 rounded-[2rem] border border-green-100 text-center">
-                    <p className="text-[10px] font-black text-green-500 uppercase mb-2">
+                  <div className="p-8 bg-green-50 rounded-[2.5rem] border-2 border-green-100 text-center shadow-inner">
+                    <p className="text-[9px] font-black text-green-500 uppercase mb-3">
                       Илгээсэн хариу:
                     </p>
                     <p className="text-md font-black text-green-900 italic">
@@ -349,12 +368,12 @@ export default function Manager() {
                       value={reply}
                       onChange={(e) => setReply(e.target.value)}
                       placeholder="Зөвлөгөө эсвэл хариуг энд бичнэ үү..."
-                      className="w-full h-40 p-6 bg-slate-50 border-2 border-transparent focus:border-indigo-600 rounded-[2rem] outline-none font-bold text-sm resize-none transition-all shadow-inner"
+                      className="w-full h-40 p-7 bg-slate-50 border-2 border-transparent focus:border-indigo-600 rounded-[2.5rem] outline-none font-bold text-sm resize-none transition-all shadow-inner"
                     />
                     <button
                       onClick={() => handleResolve(selectedItem.customId)}
                       disabled={isSubmitting}
-                      className={`w-full py-6 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-2 ${isSubmitting ? "bg-slate-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-1"}`}
+                      className={`w-full py-6 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-xl transition-all flex items-center justify-center gap-2 ${isSubmitting ? "bg-slate-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 active:scale-95"}`}
                     >
                       {isSubmitting ? "ТҮР ХҮЛЭЭНЭ ҮҮ..." : "ХАРИУ ИЛГЭЭХ"}
                     </button>
