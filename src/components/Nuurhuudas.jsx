@@ -1,4 +1,6 @@
 import Link from "next/link";
+// Санамж: Хэрэв чи 'yar.js' хуудас руу үсрэх гэж байгаа бол заавал YarPage-ийг энд import хийх шаардлагагүй.
+// Next.js-ийн Link href="/yar" гэхэд л хангалттай.
 
 export default function Nuurhuudas() {
   const symptoms = [
@@ -10,9 +12,17 @@ export default function Nuurhuudas() {
 
   return (
     <div className="bg-white text-[#1A1A1A] font-sans selection:bg-[#F79434]/30 overflow-x-hidden">
+      {/* --- 🚨 ЯАРАЛТАЙ ТУСЛАМЖ ТОГТМОЛ ТОВЧЛУУР (Floating) --- */}
+      <Link href="/yar">
+        <div className="fixed bottom-6 right-6 z-[100] group cursor-pointer">
+          <button className="w-16 h-16 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-white text-2xl animate-bounce border-4 border-white">
+            🚨
+          </button>
+        </div>
+      </Link>
+
       {/* --- HERO SECTION --- */}
       <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 md:pt-24 pb-16 md:pb-24 flex flex-col md:grid md:grid-cols-2 gap-10 md:gap-12 items-center">
-        {/* Арын чимэглэл blur - Mobile дээр жижигсэв */}
         <div className="absolute top-0 -left-10 md:-left-20 w-48 h-48 md:w-72 md:h-72 bg-[#2D4999] opacity-[0.03] rounded-full blur-3xl"></div>
 
         <div className="relative z-10 order-2 md:order-1 text-center md:text-left">
@@ -33,21 +43,20 @@ export default function Nuurhuudas() {
           <div className="mt-10 md:mt-12 flex flex-col sm:flex-row justify-center md:justify-start gap-4 md:gap-5 px-4 sm:px-0">
             <Link
               href="/asuult"
-              className="group relative bg-[#2D4999] text-white px-8 md:px-10 py-4 rounded-2xl font-bold shadow-xl shadow-indigo-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 text-center"
+              className="bg-[#2D4999] text-white px-8 md:px-10 py-4 rounded-2xl font-bold shadow-xl hover:-translate-y-1 transition-all text-center"
             >
               Тусламж хүсэх
-              <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></span>
             </Link>
+
             <Link
-              href="#learn-more"
-              className="bg-white border-2 border-gray-100 text-gray-600 px-8 md:px-10 py-4 rounded-2xl font-bold hover:bg-gray-50 hover:border-gray-200 transition-all duration-300 text-center"
+              href="/yar"
+              className="bg-red-600 text-white px-8 md:px-10 py-4 rounded-2xl font-bold shadow-xl hover:bg-red-700 hover:-translate-y-1 transition-all text-center"
             >
-              Мэдээлэл авах
+              🚨 ЯАРАЛТАЙ ТУСЛАМЖ
             </Link>
           </div>
         </div>
 
-        {/* Зургийн хэсэг - Хэмжээг нь автоматаар тохируулдаг болгосон */}
         <div className="order-1 md:order-2 relative group w-full max-w-md mx-auto">
           <div className="absolute -inset-4 bg-gradient-to-tr from-[#F79434] to-[#2D4999] rounded-[2.5rem] opacity-20 blur-2xl group-hover:opacity-30 transition duration-1000"></div>
           <div className="relative bg-white p-2 md:p-3 rounded-[2.5rem] shadow-2xl overflow-hidden">
@@ -98,15 +107,13 @@ export default function Nuurhuudas() {
             ].map((item, idx) => (
               <div
                 key={idx}
-                className={`bg-white p-8 md:p-10 rounded-[2rem] border-t-8 ${item.color} shadow-sm hover:shadow-xl transition-shadow duration-300`}
+                className={`bg-white p-8 rounded-[2rem] border-t-8 ${item.color} shadow-sm hover:shadow-xl transition-all duration-300`}
               >
-                <span className="text-3xl md:text-4xl mb-4 md:mb-6 block">
-                  {item.icon}
-                </span>
+                <span className="text-3xl mb-4 block">{item.icon}</span>
                 <h3 className="font-bold text-xl mb-3 text-[#2D4999]">
                   {item.title}
                 </h3>
-                <p className="text-gray-500 leading-relaxed text-sm md:text-base">
+                <p className="text-gray-500 leading-relaxed text-sm">
                   {item.desc}
                 </p>
               </div>
@@ -117,95 +124,69 @@ export default function Nuurhuudas() {
 
       {/* --- SYMPTOMS SECTION --- */}
       <section className="py-16 md:py-24 max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold mb-12 md:mb-16 text-[#2D4999]">
+        <h2 className="text-2xl md:text-3xl font-bold mb-12 text-[#2D4999]">
           Анхаарах шинж тэмдгүүд
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {symptoms.map((s, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 md:gap-5 bg-white p-5 md:p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-[#F79434]/50 transition-colors"
+              className="flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm"
             >
-              <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-[#F79434]/10 rounded-full flex items-center justify-center">
-                <div className="w-2.5 md:w-3 h-2.5 md:h-3 bg-[#F79434] rounded-full"></div>
-              </div>
-              <span className="font-semibold text-gray-700 text-left text-sm md:text-base">
-                {s}
-              </span>
+              <div className="w-3 h-3 bg-[#F79434] rounded-full"></div>
+              <span className="font-semibold text-gray-700 text-sm">{s}</span>
             </div>
           ))}
         </div>
       </section>
 
       {/* --- ACTION CARDS --- */}
-      <section className="bg-gradient-to-br from-[#2D4999] to-[#1e326b] py-16 md:py-24 px-4 sm:px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 md:w-96 md:h-96 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-          <div className="bg-white/10 backdrop-blur-md p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/20">
-            <h3 className="text-xl md:text-2xl font-bold mb-6 md:mb-8 flex items-center gap-3 text-white">
-              <span className="w-6 md:w-8 h-1 bg-[#F79434] inline-block"></span>{" "}
-              Хэрэв чи өртсөн бол:
+      <section className="bg-gradient-to-br from-[#2D4999] to-[#1e326b] py-16 px-4 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2rem] border border-white/20 text-white">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <span className="w-8 h-1 bg-[#F79434] inline-block"></span> Хэрэв
+              чи өртсөн бол:
             </h3>
-            <ul className="space-y-4 md:space-y-5 text-base md:text-lg">
-              {[
-                "Итгэдэг хүндээ заавал хэлээрэй.",
-                "Өөрийгөө битгий буруутга.",
-                "Ганцаараа битгий бай.",
-              ].map((text, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-3 opacity-90 text-white"
-                >
-                  <span className="text-[#F79434]">✓</span> {text}
-                </li>
-              ))}
+            <ul className="space-y-4">
+              <li>✓ Итгэдэг хүндээ заавал хэлээрэй.</li>
+              <li>✓ Өөрийгөө битгий буруутга.</li>
+              <li>✓ Ганцаараа битгий бай.</li>
             </ul>
           </div>
-
-          <div className="bg-gradient-to-br from-[#F79434] to-[#ffab5a] p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl">
-            <h3 className="text-xl md:text-2xl font-bold mb-6 md:mb-8 flex items-center gap-3 text-white">
-              <span className="w-6 md:w-8 h-1 bg-white inline-block"></span>{" "}
-              Хэрэв чи харсан бол:
+          <div className="bg-gradient-to-br from-[#F79434] to-[#ffab5a] p-8 rounded-[2rem] text-white">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <span className="w-8 h-1 bg-white inline-block"></span> Хэрэв чи
+              харсан бол:
             </h3>
-            <ul className="space-y-4 md:space-y-5 text-base md:text-lg">
-              {[
-                "Үл тоож болохгүй.",
-                "Найзыгаа дэмжиж хамт бай.",
-                "Багш, эцэг эхэд мэдэгд.",
-              ].map((text, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-3 text-white font-medium"
-                >
-                  <span>●</span> {text}
-                </li>
-              ))}
+            <ul className="space-y-4">
+              <li>● Үл тоож болохгүй.</li>
+              <li>● Найзыгаа дэмжиж хамт бай.</li>
+              <li>● Багш, эцэг эхэд мэдэгд.</li>
             </ul>
           </div>
         </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="py-12 md:py-16 text-center bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-10 md:mb-12"></div>
-          <p className="font-black text-xl md:text-2xl text-[#2D4999] tracking-tight uppercase">
+      <footer className="py-12 text-center bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <p className="font-black text-xl text-[#2D4999] uppercase">
             Anti-Bullying
           </p>
-          <p className="mt-4 text-gray-400 text-[10px] md:text-sm">
+          <p className="mt-4 text-gray-400 text-xs">
             © 2026. Сайн үйлс бүхэн дэлгэрэх болтугай.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-6 md:gap-10">
-            {["ТУСЛАМЖ АВАХ", "ПРОФАЙЛ", "МЭДЭЭЛЭЛ"].map((item) => (
-              <Link
-                key={item}
-                href="#"
-                className="text-[10px] md:text-xs font-black tracking-widest text-gray-500 hover:text-[#2D4999] transition-colors"
-              >
-                {item}
-              </Link>
-            ))}
+          <div className="mt-8 flex justify-center gap-6">
+            <Link href="/yar" className="text-xs font-black text-red-600">
+              🚨 ЯАРАЛТАЙ
+            </Link>
+            <Link href="#" className="text-xs font-black text-gray-500">
+              ПРОФАЙЛ
+            </Link>
+            <Link href="#" className="text-xs font-black text-gray-500">
+              МЭДЭЭЛЭЛ
+            </Link>
           </div>
         </div>
       </footer>
