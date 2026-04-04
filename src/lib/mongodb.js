@@ -1,12 +1,16 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
-const options = {};
+const options = {
+  connectTimeoutMS: 10000, // Холбогдохыг 10 секунд хүлээнэ
+};
 
 let client;
 let clientPromise;
 
-if (!uri) throw new Error("MONGODB_URI тохируулаагүй байна!");
+if (!process.env.MONGODB_URI) {
+  throw new Error("MONGODB_URI-г .env.local файлдаа тохируулаагүй байна!");
+}
 
 if (process.env.NODE_ENV === "development") {
   if (!global._mongoClientPromise) {

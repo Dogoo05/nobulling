@@ -1,8 +1,11 @@
+import { useState } from "react";
 import Link from "next/link";
-// Санамж: Хэрэв чи 'yar.js' хуудас руу үсрэх гэж байгаа бол заавал YarPage-ийг энд import хийх шаардлагагүй.
-// Next.js-ийн Link href="/yar" гэхэд л хангалттай.
 
 export default function Nuurhuudas() {
+  const [searchId, setSearchId] = useState("");
+  const [searchResult, setSearchResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const symptoms = [
     "Найз нөхдөөсөө хөндийрөх",
     "Сэтгэл санаа тогтворгүй болох",
@@ -10,110 +13,193 @@ export default function Nuurhuudas() {
     "Өөрийгөө буруутгах мэдрэмж",
   ];
 
+  const handleSearch = async () => {
+    const cleanId = searchId.trim().toUpperCase();
+    if (!cleanId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/huselt?id=${cleanId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setSearchResult(data.data);
+      } else {
+        alert("Код олдсонгүй.");
+        setSearchResult(null);
+      }
+    } catch (e) {
+      alert("Алдаа гарлаа.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="bg-white text-[#1A1A1A] font-sans selection:bg-[#F79434]/30 overflow-x-hidden">
-      {/* --- 🚨 ЯАРАЛТАЙ ТУСЛАМЖ ТОГТМОЛ ТОВЧЛУУР (Floating) --- */}
+    <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans selection:bg-indigo-100 overflow-x-hidden">
+      {/* --- Floating SOS Button --- */}
       <Link href="/yar">
-        <div className="fixed bottom-6 right-6 z-[100] group cursor-pointer">
-          <button className="w-16 h-16 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-white text-2xl animate-bounce border-4 border-white">
-            🚨
-          </button>
-        </div>
+        <button className="fixed bottom-8 right-8 z-50 w-16 h-16 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-2xl animate-bounce border-4 border-white text-white">
+          🚨
+        </button>
       </Link>
 
-      {/* --- HERO SECTION --- */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 md:pt-24 pb-16 md:pb-24 flex flex-col md:grid md:grid-cols-2 gap-10 md:gap-12 items-center">
-        <div className="absolute top-0 -left-10 md:-left-20 w-48 h-48 md:w-72 md:h-72 bg-[#2D4999] opacity-[0.03] rounded-full blur-3xl"></div>
-
-        <div className="relative z-10 order-2 md:order-1 text-center md:text-left">
-          <span className="inline-block py-1 px-4 rounded-full bg-[#2D4999]/10 text-[#2D4999] text-xs md:text-sm font-bold mb-4 md:mb-6">
-            Бид хамтдаа хүчтэй 🤝
+      {/* --- Navigation --- */}
+      <nav className="max-w-7xl mx-auto px-6 py-8 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-40">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-indigo-100">
+            AS
+          </div>
+          <span className="font-black text-xl tracking-tighter uppercase italic text-slate-800">
+            SafeSpace
           </span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.1] text-[#2D4999]">
-            Чи ганцаараа <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2D4999] to-[#F79434]">
-              биш.
-            </span>
-          </h1>
-          <p className="mt-6 md:mt-8 text-base md:text-xl text-gray-500 leading-relaxed max-w-lg mx-auto md:mx-0">
-            Дээрэлхэлтийн эсрэг нэгдэж, бие биедээ тусалъя. Тусламж авах нь
-            хамгийн зөв бөгөөд зоригтой алхам юм.
-          </p>
+        </div>
+        <div className="flex gap-4">
+          <Link
+            href="/asuult"
+            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
+          >
+            Анкет бөглөх
+          </Link>
+        </div>
+      </nav>
 
-          <div className="mt-10 md:mt-12 flex flex-col sm:flex-row justify-center md:justify-start gap-4 md:gap-5 px-4 sm:px-0">
+      {/* --- Hero & Interaction Section --- */}
+      <main className="max-w-7xl mx-auto px-6 pt-8 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="space-y-8 text-center lg:text-left">
+          <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+            Бид хамтдаа хүчтэй 🤝
+          </div>
+          <h1 className="text-6xl md:text-8xl font-black text-slate-900 leading-[0.85] tracking-tighter uppercase italic">
+            Чи ганцаараа <br />
+            <span className="text-indigo-600">биш.</span>
+          </h1>
+          <p className="text-slate-400 font-bold text-sm md:text-base leading-relaxed max-w-sm mx-auto lg:mx-0 uppercase tracking-tight">
+            Дээрэлхэлтийн эсрэг нэгдэж, бие биедээ тусалъя. Тусламж авах нь
+            хамгийн зөв алхам юм.
+          </p>
+          <div className="flex justify-center lg:justify-start">
             <Link
               href="/asuult"
-              className="bg-[#2D4999] text-white px-8 md:px-10 py-4 rounded-2xl font-bold shadow-xl hover:-translate-y-1 transition-all text-center"
+              className="bg-indigo-600 text-white px-12 py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
             >
-              Тусламж хүсэх
-            </Link>
-
-            <Link
-              href="/yar"
-              className="bg-red-600 text-white px-8 md:px-10 py-4 rounded-2xl font-bold shadow-xl hover:bg-red-700 hover:-translate-y-1 transition-all text-center"
-            >
-              🚨 ЯАРАЛТАЙ ТУСЛАМЖ
+              Тусламж хүсэх →
             </Link>
           </div>
         </div>
 
-        <div className="order-1 md:order-2 relative group w-full max-w-md mx-auto">
-          <div className="absolute -inset-4 bg-gradient-to-tr from-[#F79434] to-[#2D4999] rounded-[2.5rem] opacity-20 blur-2xl group-hover:opacity-30 transition duration-1000"></div>
-          <div className="relative bg-white p-2 md:p-3 rounded-[2.5rem] shadow-2xl overflow-hidden">
-            <img
-              src="https://cccp.gov.mn/images/content/fc6e0f71b6eba7f6034b4fd9ab5974d8.png"
-              alt="Together"
-              className="w-full h-auto object-cover rounded-[2rem] transform group-hover:scale-105 transition duration-700"
-            />
+        {/* --- Right Column: SOS and Search --- */}
+        <div className="space-y-6 w-full max-w-md mx-auto">
+          {/* 1. ЯАРАЛТАЙ ТУСЛАМЖ (ДЭЭР НЬ) */}
+          <Link href="/yar" className="block group">
+            <div className="bg-red-600 p-8 rounded-[2.5rem] shadow-xl shadow-red-100 border border-red-500 flex items-center justify-between transition-all group-hover:scale-[1.02] group-active:scale-95">
+              <div className="text-white">
+                <h2 className="text-xl font-black uppercase italic tracking-tighter leading-none">
+                  Яаралтай тусламж
+                </h2>
+                <p className="text-red-200 text-[9px] font-black uppercase tracking-widest mt-2">
+                  Яг одоо тусламж хэрэгтэй бол энд дар
+                </p>
+              </div>
+              <span className="text-4xl group-hover:animate-bounce">🚨</span>
+            </div>
+          </Link>
+
+          {/* 2. ХАРИУ ШАЛГАХ (ДООРОО) */}
+          <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-100 border border-slate-100 relative overflow-hidden group">
+            <div className="relative z-10 space-y-6">
+              <div>
+                <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-800 leading-none">
+                  Хариу шалгах
+                </h2>
+                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2">
+                  Өөрийн нууц кодыг оруулж хариугаа хар
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <input
+                  value={searchId}
+                  onChange={(e) => setSearchId(e.target.value)}
+                  placeholder="ID: 2026-ABCD"
+                  className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-50 p-5 rounded-2xl text-sm font-bold outline-none transition-all placeholder:text-slate-200"
+                />
+                <button
+                  onClick={handleSearch}
+                  disabled={loading}
+                  className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"
+                >
+                  {loading ? "Хайж байна..." : "Шалгах"}
+                </button>
+              </div>
+
+              {searchResult && (
+                <div className="pt-6 border-t border-slate-50 animate-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex justify-between items-center mb-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${searchResult.status === "Шийдвэрлэсэн" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}
+                    >
+                      {searchResult.status || "Хүлээгдэж буй"}
+                    </span>
+                    <button
+                      onClick={() => setSearchResult(null)}
+                      className="text-slate-200 hover:text-slate-400"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="p-5 bg-indigo-50/50 rounded-[2rem] border border-indigo-50">
+                    <p className="text-[8px] font-black text-indigo-300 uppercase mb-2 tracking-widest italic">
+                      Багшийн хариу:
+                    </p>
+                    <p className="text-xs font-bold text-indigo-900 leading-relaxed italic">
+                      {searchResult.adminReply ||
+                        "Таны хүсэлтийг хүлээн авлаа. Багш удахгүй хариу бичих болно."}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* --- INFO SECTION --- */}
-      <section id="learn-more" className="bg-[#F8FAFC] py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#2D4999] mb-4 md:mb-6">
+      {/* --- Types Grid (Буцааж нэмэв) --- */}
+      <section className="bg-white py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
               Дээрэлхэлт гэж юу вэ?
             </h2>
-            <div className="w-20 md:w-24 h-1.5 bg-[#F79434] mx-auto rounded-full mb-6 md:mb-8"></div>
-            <p className="max-w-3xl mx-auto text-base md:text-lg leading-relaxed text-gray-600 italic px-2">
-              "Энэ бол хэн нэгнийг санаатайгаар, давтан үйлдлээр гомдоох,
-              айлгах, гадуурхах үйлдэл юм. Үүнд бие махбод болон сэтгэл санааны
-              бүх дарамт орно."
-            </p>
+            <div className="w-16 h-1 bg-indigo-600 mx-auto mt-4 rounded-full"></div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 title: "Сэтгэлзүйн",
-                desc: "Доромжлох, гадуурхах, худлаа цуу яриа тараах.",
                 icon: "🗣️",
-                color: "border-[#F79434]",
+                desc: "Доромжлох, гадуурхах, цуу яриа тараах.",
               },
               {
                 title: "Бие махбодын",
-                desc: "Цохих, түлхэх, эд зүйлсийг нь эвдэх.",
                 icon: "👊",
-                color: "border-[#2D4999]",
+                desc: "Цохих, түлхэх, эд зүйлсийг нь эвдэх.",
               },
               {
                 title: "Цахим",
-                desc: "Сошиал сувгаар дарамтлах, нууц задрах.",
                 icon: "📱",
-                color: "border-[#5AC8FA]",
+                desc: "Сошиал сувгаар дарамтлах, нууц задрах.",
               },
-            ].map((item, idx) => (
+            ].map((item, i) => (
               <div
-                key={idx}
-                className={`bg-white p-8 rounded-[2rem] border-t-8 ${item.color} shadow-sm hover:shadow-xl transition-all duration-300`}
+                key={i}
+                className="bg-slate-50/50 p-10 rounded-[3rem] border border-slate-50 hover:shadow-xl transition-all group"
               >
-                <span className="text-3xl mb-4 block">{item.icon}</span>
-                <h3 className="font-bold text-xl mb-3 text-[#2D4999]">
+                <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
+                  {item.icon}
+                </div>
+                <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-800 mb-3">
                   {item.title}
                 </h3>
-                <p className="text-gray-500 leading-relaxed text-sm">
+                <p className="text-slate-400 text-[11px] font-bold leading-relaxed uppercase tracking-tight">
                   {item.desc}
                 </p>
               </div>
@@ -122,73 +208,71 @@ export default function Nuurhuudas() {
         </div>
       </section>
 
-      {/* --- SYMPTOMS SECTION --- */}
-      <section className="py-16 md:py-24 max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold mb-12 text-[#2D4999]">
+      {/* --- Symptoms Section (Буцааж нэмэв) --- */}
+      <section className="max-w-5xl mx-auto px-6 py-24">
+        <h2 className="text-2xl font-black text-center mb-12 uppercase italic tracking-tighter text-slate-800">
           Анхаарах шинж тэмдгүүд
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {symptoms.map((s, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm"
+              className="flex items-center gap-5 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm"
             >
-              <div className="w-3 h-3 bg-[#F79434] rounded-full"></div>
-              <span className="font-semibold text-gray-700 text-sm">{s}</span>
+              <div className="w-3 h-3 bg-indigo-600 rounded-full shadow-lg shadow-indigo-100"></div>
+              <span className="font-black text-slate-700 text-xs uppercase tracking-tight">
+                {s}
+              </span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* --- ACTION CARDS --- */}
-      <section className="bg-gradient-to-br from-[#2D4999] to-[#1e326b] py-16 px-4 relative overflow-hidden">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2rem] border border-white/20 text-white">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-              <span className="w-8 h-1 bg-[#F79434] inline-block"></span> Хэрэв
-              чи өртсөн бол:
+      {/* --- Action Cards (Буцааж нэмэв) --- */}
+      <section className="max-w-7xl mx-auto px-6 pb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white shadow-2xl">
+            <h3 className="text-2xl font-black mb-8 uppercase italic tracking-tighter">
+              Хэрэв чи өртсөн бол:
             </h3>
-            <ul className="space-y-4">
-              <li>✓ Итгэдэг хүндээ заавал хэлээрэй.</li>
-              <li>✓ Өөрийгөө битгий буруутга.</li>
-              <li>✓ Ганцаараа битгий бай.</li>
+            <ul className="space-y-5 text-[11px] font-black uppercase tracking-widest opacity-80">
+              <li className="flex items-start gap-3">
+                <span className="text-indigo-400">●</span> Итгэдэг хүндээ заавал
+                хэлээрэй.
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-indigo-400">●</span> Өөрийгөө битгий
+                буруутга.
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-indigo-400">●</span> Ганцаараа битгий бай.
+              </li>
             </ul>
           </div>
-          <div className="bg-gradient-to-br from-[#F79434] to-[#ffab5a] p-8 rounded-[2rem] text-white">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-              <span className="w-8 h-1 bg-white inline-block"></span> Хэрэв чи
-              харсан бол:
+          <div className="bg-indigo-600 p-12 rounded-[3.5rem] text-white shadow-2xl shadow-indigo-100">
+            <h3 className="text-2xl font-black mb-8 uppercase italic tracking-tighter">
+              Хэрэв чи харсан бол:
             </h3>
-            <ul className="space-y-4">
-              <li>● Үл тоож болохгүй.</li>
-              <li>● Найзыгаа дэмжиж хамт бай.</li>
-              <li>● Багш, эцэг эхэд мэдэгд.</li>
+            <ul className="space-y-5 text-[11px] font-black uppercase tracking-widest">
+              <li className="flex items-start gap-3">
+                <span>●</span> Үл тоож болохгүй.
+              </li>
+              <li className="flex items-start gap-3">
+                <span>●</span> Найзыгаа дэмжиж хамт бай.
+              </li>
+              <li className="flex items-start gap-3">
+                <span>●</span> Багш, эцэг эхэд мэдэгд.
+              </li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* --- FOOTER --- */}
-      <footer className="py-12 text-center bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <p className="font-black text-xl text-[#2D4999] uppercase">
-            Anti-Bullying
-          </p>
-          <p className="mt-4 text-gray-400 text-xs">
-            © 2026. Сайн үйлс бүхэн дэлгэрэх болтугай.
-          </p>
-          <div className="mt-8 flex justify-center gap-6">
-            <Link href="/yar" className="text-xs font-black text-red-600">
-              🚨 ЯАРАЛТАЙ
-            </Link>
-            <Link href="#" className="text-xs font-black text-gray-500">
-              ПРОФАЙЛ
-            </Link>
-            <Link href="#" className="text-xs font-black text-gray-500">
-              МЭДЭЭЛЭЛ
-            </Link>
-          </div>
-        </div>
+      {/* --- Footer --- */}
+      <footer className="py-16 text-center border-t border-slate-50">
+        <p className="text-slate-200 text-[10px] font-black uppercase tracking-[0.5em]">
+          © 2026 ANTI-BULLYING PROJECT
+        </p>
       </footer>
     </div>
   );

@@ -2,128 +2,86 @@ import clientPromise from "../../lib/mongodb";
 
 export const config = {
   api: {
-    bodyParser: { sizeLimit: "10mb" },
-    responseLimit: false,
+    bodyParser: { sizeLimit: "10mb" }, // Зураг хүлээн авах хэмжээ
   },
 };
 
 export default async function handler(req, res) {
-  try {
-    const client = await clientPromise;
-    const db = client.db("test");
+  const client = await clientPromise;
+  const db = client.db("test");
 
-    // --- 1. POST: Шинэ хүсэлт хадгалах ---
+  try {
+    // 1. POST: Шинэ анкет хадгалах
     if (req.method === "POST") {
-      const { customId, answers, description, imageUrl, isUrgent } = req.body;
+      const { customId, answers, description, imageUrl } = req.body;
+      const isUrgent = customId.startsWith("SOS-");
 
       const newDoc = {
-        customId: customId?.toUpperCase() || `ID-${Date.now()}`,
+        customId,
         answers: answers || {},
         description: description || "",
-        imageUrl: imageUrl || "",
+        imageUrl: imageUrl || "", // Base64 зураг энд хадгалагдана
         status: "Хүлээгдэж буй",
         adminReply: "",
         createdAt: new Date(),
-        isUrgent: !!isUrgent,
+        isUrgent,
       };
 
-      const collectionName = isUrgent ? "sos_requests" : "answers";
-      await db.collection(collectionName).insertOne(newDoc);
-
-      return res.status(200).json({ success: true, id: customId });
+      const collection = isUrgent ? "sos_requests" : "answers";
+      await db.collection(collection).insertOne(newDoc);
+      return res.status(200).json({ success: true });
     }
 
-    // --- 2. GET: Мэдээлэл татах БОЛОН Хайлт хийх ---
+    // 2. GET: Мэдээлэл татах (Зурагтай хамт)
     if (req.method === "GET") {
       const { id } = req.query;
 
-      // Хэрэв ID ирвэл ХАЙЛТ хийнэ
       if (id) {
-        const query = { customId: id.trim().toUpperCase() };
-
-        // Хоёр цуглуулгаас зэрэг хайх
-        const [normalResult, urgentResult] = await Promise.all([
-          db.collection("answers").findOne(query),
-          db.collection("sos_requests").findOne(query),
-        ]);
-
-        const finalResult = normalResult || urgentResult;
-
-        if (finalResult) {
-          return res.status(200).json({ success: true, data: finalResult });
-        } else {
-          return res
-            .status(404)
-            .json({ success: false, error: "Код олдсонгүй" });
-        }
+        const query = { customId: id };
+        let result = await db.collection("sos_requests").findOne(query);
+        if (!result) result = await db.collection("answers").findOne(query);
+        return res.status(200).json({ success: true, data: result });
       }
 
-      // Хэрэв ID байхгүй бол МЕНЕЖЕРТ зориулж бүх өгөгдлийг татах
+      // Зургийг хасалгүйгээр бүгдийг татна
       const [normal, urgent] = await Promise.all([
-        db
-          .collection("answers")
-          .find({})
-          .sort({ createdAt: -1 })
-          .limit(20)
-          .toArray(),
+        db.collection("answers").find({}).sort({ createdAt: -1 }).toArray(),
         db
           .collection("sos_requests")
           .find({})
           .sort({ createdAt: -1 })
-          .limit(20)
           .toArray(),
       ]);
 
-      const allData = [...normal, ...urgent].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      );
-
-      return res.status(200).json({ success: true, data: allData });
+      return res
+        .status(200)
+        .json({ success: true, data: [...urgent, ...normal] });
     }
 
-    // --- 3. PATCH: Хариу илгээх (Менежер) ---
+    // 3. PATCH: Төлөв өөрчлөх болон Хариу илгээх
     if (req.method === "PATCH") {
       const { id, status, adminReply } = req.body;
-      const query = { customId: id };
-      const updateDoc = {
-        $set: {
-          status: status,
-          adminReply: adminReply,
-          updatedAt: new Date(),
-        },
-      };
-
-      const [res1, res2] = await Promise.all([
-        db.collection("answers").updateOne(query, updateDoc),
-        db.collection("sos_requests").updateOne(query, updateDoc),
-      ]);
-
-      if (res1.modifiedCount > 0 || res2.modifiedCount > 0) {
-        return res.status(200).json({ success: true });
-      }
-      return res
-        .status(404)
-        .json({ success: false, error: "Хүсэлт олдсонгүй." });
-    }
-
-    // --- 4. DELETE: Устгах ---
-    if (req.method === "DELETE") {
-      const { id } = req.query;
-      const query = { customId: id };
+      const update = { $set: { status, adminReply, updatedAt: new Date() } };
 
       await Promise.all([
-        db.collection("answers").deleteOne(query),
-        db.collection("sos_requests").deleteOne(query),
+        db.collection("answers").updateOne({ customId: id }, update),
+        db.collection("sos_requests").updateOne({ customId: id }, update),
       ]);
-
       return res.status(200).json({ success: true });
     }
 
-    return res
-      .status(405)
-      .json({ success: false, error: `Method ${req.method} Not Allowed` });
+    // 4. DELETE: Устгах
+    if (req.method === "DELETE") {
+      const { id } = req.query;
+      await Promise.all([
+        db.collection("answers").deleteOne({ customId: id }),
+        db.collection("sos_requests").deleteOne({ customId: id }),
+      ]);
+      return res.status(200).json({ success: true });
+    }
+
+    return res.status(405).json({ error: "Method Not Allowed" });
   } catch (error) {
-    console.error("API SERVER ERROR:", error);
     return res.status(500).json({ success: false, error: error.message });
   }
 }

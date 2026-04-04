@@ -33,14 +33,12 @@ export default function Nav() {
           <div className="flex items-center gap-8 text-[15px] font-bold text-slate-600">
             <Link href="/" className="hover:text-indigo-600 transition-colors">
               Нүүр хуудас
-              {/* Энд байсан <span>-г устгав */}
             </Link>
             <Link
               href="/asuult"
               className="hover:text-indigo-600 transition-colors"
             >
               Тусламж
-              {/* Энд байсан <span>-г устгав */}
             </Link>
           </div>
 
