@@ -15,21 +15,28 @@ export default function Nuurhuudas() {
   ];
 
   const handleSearch = async () => {
-    const cleanId = searchId.trim().toUpperCase();
+    const cleanId = searchId.trim().toUpperCase(); // Оролтыг цэвэрлэх
     if (!cleanId) return;
+
     setLoading(true);
     setError("");
+    setSearchResult(null); // Шинэ хайлт эхлэхэд өмнөх үр дүнг арилгах
+
     try {
+      // API-аас датаг дуудах
       const res = await fetch(`/api/huselt?id=${cleanId}`);
       const data = await res.json();
+
       if (data.success && data.data) {
         setSearchResult(data.data);
       } else {
-        setError("Багш хараахан хариу өгөөгүй байна. Түр хүлээнэ үү. ⏳");
-        setSearchResult(null);
+        // Хэрэв ID олдсон ч хариу байхгүй эсвэл ID олдохгүй бол
+        setError(
+          data.error || "Мэдээлэл олдсонгүй. ID-гаа дахин шалгана уу. ⏳",
+        );
       }
     } catch (e) {
-      setError("Алдаа гарлаа.");
+      setError("Сервертэй холбогдоход алдаа гарлаа. Дахин оролдоно уу.");
     } finally {
       setLoading(false);
     }
@@ -37,7 +44,7 @@ export default function Nuurhuudas() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans selection:bg-indigo-100 overflow-x-hidden">
-      {/* --- 1. URGENT HEADER (Compact) --- */}
+      {/* --- 1. URGENT HEADER --- */}
       <Link href="/yar" className="block relative z-50 group">
         <div className="bg-red-600 hover:bg-red-700 py-3 px-4 flex items-center justify-center gap-3 transition-colors">
           <span className="text-lg animate-bounce">🚨</span>
@@ -48,7 +55,7 @@ export default function Nuurhuudas() {
         </div>
       </Link>
 
-      {/* --- Navigation (Tightened) --- */}
+      {/* --- Navigation --- */}
       <nav className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-40 border-b border-slate-100">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black italic shadow-md">
@@ -66,7 +73,7 @@ export default function Nuurhuudas() {
         </Link>
       </nav>
 
-      {/* --- Hero Section (Reduced Padding & Gap) --- */}
+      {/* --- Hero & Search Section --- */}
       <main className="max-w-7xl mx-auto px-4 pt-6 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div className="space-y-4 text-center lg:text-left">
           <div className="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest">
@@ -90,16 +97,16 @@ export default function Nuurhuudas() {
           </div>
         </div>
 
-        {/* --- Search Section (Compact Card) --- */}
+        {/* --- Search Section --- */}
         <div className="w-full max-w-sm mx-auto">
-          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50 relative overflow-hidden">
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 border border-slate-50 relative overflow-hidden">
             <div className="relative z-10 space-y-4">
               <div>
                 <h2 className="text-lg font-black uppercase italic tracking-tighter text-slate-800 leading-none">
                   Хариу шалгах
                 </h2>
                 <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-1">
-                  Нууц кодыг оруулна уу
+                  Өөрийн ID кодыг оруулна уу
                 </p>
               </div>
 
@@ -107,47 +114,65 @@ export default function Nuurhuudas() {
                 <input
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
-                  placeholder="ID: 2026-ABCD"
-                  className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-100 p-4 rounded-xl text-xs font-bold outline-none transition-all placeholder:text-slate-200"
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="ЖИШЭЭ: 2026-ABCD"
+                  className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-100 p-4 rounded-xl text-xs font-bold outline-none transition-all placeholder:text-slate-200 text-center uppercase"
                 />
                 <button
                   onClick={handleSearch}
                   disabled={loading}
-                  className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-md"
+                  className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-md active:scale-95"
                 >
-                  {loading ? "..." : "Шалгах"}
+                  {loading ? "Уншиж байна..." : "ШАЛГАХ"}
                 </button>
               </div>
 
               {error && (
-                <p className="text-[9px] font-black text-red-500 uppercase text-center">
-                  {error}
-                </p>
+                <div className="p-3 bg-red-50 rounded-xl">
+                  <p className="text-[9px] font-black text-red-500 uppercase text-center leading-tight">
+                    {error}
+                  </p>
+                </div>
               )}
 
               {searchResult && (
-                <div className="pt-4 border-t border-slate-50 animate-in slide-in-from-bottom-2">
-                  <div className="flex justify-between items-center mb-2">
+                <div className="pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                      ID: {searchResult.customId}
+                    </span>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${searchResult.status === "Шийдвэрлэсэн" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}
+                      className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${
+                        searchResult.status === "Шийдвэрлэсэн"
+                          ? "bg-green-100 text-green-600"
+                          : "bg-orange-100 text-orange-600"
+                      }`}
                     >
                       {searchResult.status || "Хүлээгдэж буй"}
                     </span>
-                    <button
-                      onClick={() => setSearchResult(null)}
-                      className="text-slate-200 hover:text-slate-400"
-                    >
-                      ✕
-                    </button>
                   </div>
-                  <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-50">
-                    <p className="text-[8px] font-black text-indigo-300 uppercase mb-1 italic tracking-widest">
-                      Багшийн хариу:
-                    </p>
-                    <p className="text-[10px] font-bold text-indigo-900 leading-relaxed italic">
-                      {searchResult.adminReply ||
-                        "Багш удахгүй хариу бичих болно."}
-                    </p>
+
+                  <div className="space-y-3">
+                    {/* Хэрэглэгчийн тайлбар */}
+                    <div className="p-3 bg-slate-50 rounded-xl">
+                      <p className="text-[7px] font-black text-slate-300 uppercase mb-1">
+                        Таны тайлбар:
+                      </p>
+                      <p className="text-[9px] font-bold text-slate-600 italic line-clamp-2">
+                        "{searchResult.description}"
+                      </p>
+                    </div>
+
+                    {/* Багшийн хариу */}
+                    <div className="p-4 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-100">
+                      <p className="text-[8px] font-black text-indigo-200 uppercase mb-1 italic tracking-widest">
+                        Багшийн зөвлөгөө:
+                      </p>
+                      <p className="text-[11px] font-bold text-white leading-relaxed italic">
+                        {searchResult.adminReply ||
+                          "Багш одоогоор хариу бичиж байна. Түр хүлээнэ үү... ✍️"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -156,7 +181,9 @@ export default function Nuurhuudas() {
         </div>
       </main>
 
-      {/* --- Types Grid (Tightened Padding & Gap) --- */}
+      {/* --- Бусад хэсгүүд (Types, Symptoms, Footer хэвээрээ) --- */}
+      {/* ... (Түрүүн байсан коднууд) ... */}
+
       <section className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-8">
@@ -165,7 +192,6 @@ export default function Nuurhuudas() {
             </h2>
             <div className="w-12 h-1 bg-indigo-600 mx-auto mt-2 rounded-full"></div>
           </div>
-          {/* gap-8-аас gap-3 болгож багасгав */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
               {
@@ -201,7 +227,6 @@ export default function Nuurhuudas() {
         </div>
       </section>
 
-      {/* --- Symptoms Section (Compact Grid) --- */}
       <section className="max-w-5xl mx-auto px-4 py-12">
         <h2 className="text-lg font-black text-center mb-6 uppercase italic tracking-tighter text-slate-800 underline decoration-indigo-100 decoration-4 underline-offset-4">
           Шинж тэмдгүүд
@@ -221,7 +246,6 @@ export default function Nuurhuudas() {
         </div>
       </section>
 
-      {/* --- Footer (Minimalist) --- */}
       <footer className="py-12 text-center border-t border-slate-50 bg-white">
         <p className="text-slate-200 text-[8px] font-black uppercase tracking-[0.4em]">
           © 2026 SAFE SPACE PROJECT • UB

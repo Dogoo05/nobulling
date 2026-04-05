@@ -1,30 +1,69 @@
 import clientPromise from "@/lib/dbConnect";
 
 export const config = {
-  api: {
-    bodyParser: { sizeLimit: "10mb" },
-  },
+  api: { bodyParser: { sizeLimit: "10mb" } },
 };
 
 export default async function handler(req, res) {
-  const client = await clientPromise;
-  const db = client.db("test");
-
   try {
-    // 1. POST: Хадгалах (Хэвээрээ)
+    const client = await clientPromise;
+    const db =
+      typeof client.db === "function"
+        ? client.db("test")
+        : client.connection.db;
+
+    // --- GET: БҮХ ДАТА ЭСВЭЛ НЭГ ID-ГААР ШАЛГАХ ---
+    if (req.method === "GET") {
+      const { id } = req.query;
+
+      // Хэрэв URL дээр ?id=... гэж ирвэл (Хэрэглэгч хариу шалгах үед)
+      if (id) {
+        const [res1, res2] = await Promise.all([
+          db
+            .collection("answers")
+            .findOne({ customId: id.toUpperCase().trim() }),
+          db
+            .collection("sos_requests")
+            .findOne({ customId: id.toUpperCase().trim() }),
+        ]);
+
+        const foundData = res1 || res2;
+        if (foundData) {
+          return res.status(200).json({ success: true, data: foundData });
+        } else {
+          return res
+            .status(404)
+            .json({
+              success: false,
+              error: "Мэдээлэл олдсонгүй. ID-гаа шалгана уу.",
+            });
+        }
+      }
+
+      // Админ панельд зориулж бүх датаг татах
+      const [normal, sos] = await Promise.all([
+        db.collection("answers").find({}).toArray(),
+        db.collection("sos_requests").find({}).toArray(),
+      ]);
+
+      const allData = [...normal, ...sos].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+      return res.status(200).json({ success: true, data: allData });
+    }
+
+    // --- POST: ШИНЭ АНКЕТ ИЛГЭЭХ ---
     if (req.method === "POST") {
       const { answers, description, imageUrl, isUrgent } = req.body;
+      const isSOS =
+        isUrgent || Object.values(answers || {}).some((v) => v === "🚨 SOS");
       const now = new Date();
-      const dateStr =
-        now.getFullYear().toString() +
-        (now.getMonth() + 1).toString().padStart(2, "0") +
-        now.getDate().toString().padStart(2, "0");
+      const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
       const randomStr = Math.random()
         .toString(36)
         .substring(2, 6)
         .toUpperCase();
-
-      const customId = isUrgent
+      const customId = isSOS
         ? `SOS-${dateStr}-${randomStr}`
         : `${dateStr}-${randomStr}`;
 
@@ -33,89 +72,45 @@ export default async function handler(req, res) {
         answers: answers || {},
         description: description || "",
         imageUrl: imageUrl || "",
-        status: "Хүлээгдэж буй",
+        status: "Шинэ",
         adminReply: "",
+        isUrgent: isSOS,
         createdAt: now,
-        isUrgent: !!isUrgent,
       };
 
-      const collectionName = isUrgent ? "sos_requests" : "answers";
-      await db.collection(collectionName).insertOne(newDoc);
+      const colName = isSOS ? "sos_requests" : "answers";
+      await db.collection(colName).insertOne(newDoc);
       return res.status(200).json({ success: true, customId });
     }
 
-    // 2. GET: Татах (Хэвээрээ)
-    if (req.method === "GET") {
-      const { id } = req.query;
-      if (id) {
-        let result = await db
-          .collection("sos_requests")
-          .findOne({ customId: id });
-        if (!result)
-          result = await db.collection("answers").findOne({ customId: id });
-        return res.status(200).json({ success: true, data: result });
-      }
-      const [normal, urgent] = await Promise.all([
-        db.collection("answers").find({}).sort({ createdAt: -1 }).toArray(),
-        db
-          .collection("sos_requests")
-          .find({})
-          .sort({ createdAt: -1 })
-          .toArray(),
-      ]);
-      return res
-        .status(200)
-        .json({ success: true, data: [...urgent, ...normal] });
-    }
-
-    // 3. PATCH: Төлөв өөрчлөх (ЗАСВАР ОРСОН ✅)
+    // --- PATCH: АДМИН ХАРИУ ИЛГЭЭХ ---
     if (req.method === "PATCH") {
       const { id, status, adminReply } = req.body;
-      if (!id) return res.status(400).json({ error: "ID шаардлагатай" });
+      const updateData = {
+        $set: { status, adminReply, updatedAt: new Date() },
+      };
 
-      const update = { $set: { status, adminReply, updatedAt: new Date() } };
+      const r1 = await db
+        .collection("answers")
+        .updateOne({ customId: id }, updateData);
+      const r2 = await db
+        .collection("sos_requests")
+        .updateOne({ customId: id }, updateData);
 
-      // ID нь SOS-оор эхэлсэн эсэхийг шалгаад collection-оо сонгоно
-      const targetCol = id.toString().startsWith("SOS-")
-        ? "sos_requests"
-        : "answers";
-
-      const result = await db
-        .collection(targetCol)
-        .updateOne({ customId: id }, update);
-
-      if (result.matchedCount === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Засах өгөгдөл олдсонгүй" });
+      if (r1.modifiedCount > 0 || r2.modifiedCount > 0) {
+        return res.status(200).json({ success: true });
       }
-      return res.status(200).json({ success: true });
+      return res.status(404).json({ success: false, error: "Дата олдсонгүй" });
     }
 
-    // 4. DELETE: Устгах (ЗАСВАР ОРСОН ✅)
+    // --- DELETE: УСТГАХ ---
     if (req.method === "DELETE") {
-      const { id } = req.query; // Query-гээс ID-г авна
-      if (!id) return res.status(400).json({ error: "ID шаардлагатай" });
-
-      const targetCol = id.toString().startsWith("SOS-")
-        ? "sos_requests"
-        : "answers";
-
-      const result = await db.collection(targetCol).deleteOne({ customId: id });
-
-      if (result.deletedCount === 0) {
-        // Хэрэв олдохгүй бол нөгөө цуглуулгаас нь нэг шалгаад үзье (найдвартай тал руугаа)
-        const backupCol =
-          targetCol === "sos_requests" ? "answers" : "sos_requests";
-        await db.collection(backupCol).deleteOne({ customId: id });
-      }
-
+      const { id } = req.query;
+      await db.collection("answers").deleteOne({ customId: id });
+      await db.collection("sos_requests").deleteOne({ customId: id });
       return res.status(200).json({ success: true });
     }
-
-    return res.status(405).json({ error: "Method Not Allowed" });
-  } catch (error) {
-    console.error("API ERROR:", error);
-    return res.status(500).json({ success: false, error: error.message });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
   }
 }

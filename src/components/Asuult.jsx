@@ -67,7 +67,6 @@ export default function Asuult() {
   const [loading, setLoading] = useState(false);
   const [submittedId, setSubmittedId] = useState("");
   const [copied, setCopied] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: "" });
 
   const handleCopy = () => {
     if (!submittedId) return;
@@ -78,60 +77,65 @@ export default function Asuult() {
   };
 
   const handleSubmit = async () => {
+    // Бүх асуултад хариулсан эсэхийг шалгах
     if (Object.keys(answers).length < questions.length) {
-      setToast({ show: true, message: "Бүх асуултад хариулна уу ⚠️" });
-      setTimeout(() => setToast({ show: false }), 3000);
+      alert("Бүх асуултад хариулна уу!");
       return;
     }
 
     setLoading(true);
+    let finalImageUrl = "";
 
     try {
-      let imageUrl = "";
-
-      // 1. Cloudinary Upload
+      // 1. Зураг байгаа бол Cloudinary руу хуулах
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "your_upload_preset"); // Өөрийнхөө preset-ийг бичээрэй
+        formData.append("upload_preset", "ml_defaultt"); // <--- Өөрийн Preset нэрийг энд бич!
 
         const cloudRes = await fetch(
-          "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload", // Өөрийнхөө cloud name-ийг бичээрэй
+          "https://api.cloudinary.com/v1_1/dccr94tvw/image/upload", // <--- dpxv1abc-ийн оронд өөрийн Cloud Name-ийг бич!
           { method: "POST", body: formData },
         );
+
         const cloudData = await cloudRes.json();
-        imageUrl = cloudData.secure_url || "";
+        if (cloudRes.ok) {
+          finalImageUrl = cloudData.secure_url;
+          console.log("Cloudinary URL:", finalImageUrl);
+        } else {
+          console.error("Cloudinary Error:", cloudData);
+          alert(
+            "Зураг хуулахад алдаа гарлаа, гэхдээ анкет үргэлжлүүлэн илгээгдэнэ.",
+          );
+        }
       }
 
-      // 2. MongoDB API руу илгээх
-      const response = await fetch("/api/huselt", {
+      // 2. БЭКЕНД РҮҮ ИЛГЭЭХ
+      const res = await fetch("/api/huselt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           answers,
           description,
-          imageUrl,
-          isUrgent:
-            answers[1] === "🚨 SOS" || answers[1] === "🔄 Бүх хэлбэрүүд",
+          imageUrl: finalImageUrl, // Энд зурагны линк очиж байгаа
+          isUrgent: false,
         }),
       });
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        setSubmittedId(result.customId); // Энд 20260405-ABCD хэлбэртэй ID ирнэ
+      const result = await res.json();
+      if (result.success) {
+        setSubmittedId(result.customId);
       } else {
-        throw new Error(result.error || "Алдаа гарлаа");
+        alert("Алдаа: " + result.error);
       }
-    } catch (error) {
-      setToast({ show: true, message: "Алдаа: " + error.message });
-      setTimeout(() => setToast({ show: false }), 4000);
+    } catch (err) {
+      console.error("Submit Error:", err);
+      alert("Илгээхэд алдаа гарлаа.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Амжилттай илгээгдсэн үеийн UI
   if (submittedId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] p-6 font-sans">
@@ -155,9 +159,6 @@ export default function Asuult() {
               {copied ? "ХУУЛАГДЛАА ✅" : submittedId}
             </code>
           </div>
-          <p className="mt-4 text-[9px] text-slate-400 font-bold uppercase">
-            Энэ кодоор хариугаа шалгах боломжтой
-          </p>
           <button
             onClick={() => (window.location.href = "/")}
             className="w-full mt-8 py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-colors"
@@ -171,12 +172,6 @@ export default function Asuult() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] py-12 px-4 font-sans">
-      {toast.show && (
-        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] bg-red-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl animate-bounce">
-          {toast.message}
-        </div>
-      )}
-
       <div className="max-w-6xl mx-auto space-y-12">
         <header className="text-center space-y-4">
           <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-[0.3em]">
@@ -201,11 +196,7 @@ export default function Asuult() {
                   <button
                     key={opt}
                     onClick={() => setAnswers({ ...answers, [q.id]: opt })}
-                    className={`px-4 py-3 rounded-xl text-[10px] font-black border-2 transition-all uppercase tracking-tighter ${
-                      answers[q.id] === opt
-                        ? "bg-indigo-600 border-indigo-600 text-white shadow-lg"
-                        : "bg-slate-50 border-transparent text-slate-400 hover:bg-slate-100"
-                    }`}
+                    className={`px-4 py-3 rounded-xl text-[10px] font-black border-2 transition-all uppercase tracking-tighter ${answers[q.id] === opt ? "bg-indigo-600 border-indigo-600 text-white shadow-lg" : "bg-slate-50 border-transparent text-slate-400 hover:bg-slate-100"}`}
                   >
                     {opt}
                   </button>
