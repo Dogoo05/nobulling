@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const questions = [
   {
@@ -9,7 +9,7 @@ const questions = [
       "👊 Бие махбодиор",
       "📱 Цахимаар",
       "🔄 Бүх хэлбэрүүд",
-      "🚨 ЯАРАЛТАЙ ТУСЛАМЖ",
+      "🚨 SOS",
     ],
   },
   {
@@ -19,7 +19,7 @@ const questions = [
   },
   {
     id: 3,
-    question: "3. Давтамж нь ямар vэ?",
+    question: "3. Давтамж нь ямар вэ?",
     options: ["Хэдхэн хоног", "Хэдэн сарын турш", "Нэг жилээс дээш"],
   },
   {
@@ -50,12 +50,7 @@ const questions = [
   {
     id: 9,
     question: "9. Юу хамгийн их тус болох вэ?",
-    options: [
-      "👨‍👩‍👧 Гэр бүл",
-      "🫂 Найз нөхөд",
-      "🛡️ Өөрөө",
-      "🎓 Мэргэжлийн зөвлөгөө",
-    ],
+    options: ["👨‍👩‍👧 Гэр бүл", "🫂 Найз нөхөд", "🛡️ Өөрөө", "🎓 Зөвлөгөө"],
   },
   {
     id: 10,
@@ -71,121 +66,72 @@ export default function Asuult() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submittedId, setSubmittedId] = useState("");
-  const [copied, setCopied] = useState(false); // Хуулсан эсэхийг шалгах төлөв
+  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "" });
 
-  const processImage = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (e) => {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 800;
-          const scaleSize = MAX_WIDTH / img.width;
-          canvas.width = MAX_WIDTH;
-          canvas.height = img.height * scaleSize;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL("image/jpeg", 0.5));
-        };
-      };
-    });
-  };
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(submittedId);
+  const handleCopy = () => {
+    if (!submittedId) return;
+    navigator.clipboard.writeText(submittedId).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // 2 секундын дараа буцаах
-    } catch (err) {
-      console.error("Хуулж чадсангүй: ", err);
-    }
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   const handleSubmit = async () => {
     if (Object.keys(answers).length < questions.length) {
-      return alert("Бүх асуултад хариулна уу.");
+      setToast({ show: true, message: "Бүх асуултад хариулна уу ⚠️" });
+      setTimeout(() => setToast({ show: false }), 3000);
+      return;
     }
-
     setLoading(true);
-    const isUrgent = answers[1]?.includes("🚨");
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const finalId = isUrgent
-      ? `SOS-${dateStr}-${randomPart}`
-      : `${dateStr}-${randomPart}`;
-
-    try {
-      let imgBase64 = file ? await processImage(file) : "";
-      const res = await fetch("/api/huselt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customId: finalId,
-          answers,
-          description,
-          imageUrl: imgBase64,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) setSubmittedId(finalId);
-      else alert("Алдаа: " + data.error);
-    } catch (e) {
-      alert("Илгээхэд алдаа гарлаа.");
-    } finally {
+    // Дуураймал илгээх хугацаа
+    setTimeout(() => {
+      const id =
+        "SOS-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+      setSubmittedId(id);
       setLoading(false);
-    }
+    }, 1500);
   };
 
+  // --- Амжилттай илгээгдсэн үеийн харагдац ---
   if (submittedId) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
-        <div className="bg-white p-10 rounded-[3rem] shadow-2xl shadow-indigo-100 text-center max-w-md w-full border border-indigo-50 animate-in zoom-in duration-500">
-          <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] p-6">
+        <div className="max-w-md w-full bg-white p-10 rounded-[3.5rem] shadow-2xl text-center border border-slate-50 animate-in zoom-in duration-500">
+          <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-inner italic">
             ✓
           </div>
-          <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase italic tracking-tighter">
-            Амжилттай!
+          <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase italic tracking-tighter">
+            Хүлээн авлаа!
           </h2>
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-8">
             Таны нууц кодыг хадгалж аваарай
           </p>
 
-          {/* ID-г хуулах хэсэг */}
+          {/* --- ХУУЛАХ ХЭСЭГ: Ногоон болох эффект --- */}
           <div
             onClick={handleCopy}
-            className="bg-slate-50 p-8 rounded-3xl border-2 border-dashed border-slate-200 mb-8 group transition-all hover:border-indigo-300 hover:bg-white cursor-pointer relative overflow-hidden active:scale-95 transition-transform"
+            className={`group p-8 rounded-[2.5rem] border-2 border-dashed transition-all duration-300 cursor-pointer active:scale-95 mb-10
+              ${copied ? "bg-green-50 border-green-500 shadow-lg shadow-green-100" : "bg-slate-50 border-slate-200 hover:border-indigo-300"}`}
           >
-            <code className="text-3xl font-black text-indigo-600 tracking-widest block select-all">
-              {submittedId}
+            <code
+              className={`text-2xl font-black tracking-widest block transition-colors duration-300 ${copied ? "text-green-600" : "text-indigo-600"}`}
+            >
+              {copied ? "АМЖИЛТТАЙ ХУУЛАГДЛАА ✅" : submittedId}
             </code>
-            <p className="text-[10px] font-black uppercase text-indigo-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              {copied ? "Код хуулагдлаа! ✅" : "Дарж хуулж авна уу 📋"}
+            <p
+              className={`text-[8px] font-black uppercase mt-3 tracking-widest transition-colors ${copied ? "text-green-400" : "text-slate-300 group-hover:text-indigo-400"}`}
+            >
+              {copied ? "Clipboard-д хадгалагдлаа" : "Дарж хуулж авна уу 📋"}
             </p>
           </div>
 
-          <div className="space-y-3">
-            <button
-              onClick={handleCopy}
-              className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-indigo-200 ${copied ? "bg-green-500 text-white" : "bg-slate-900 text-white hover:bg-slate-800"}`}
-            >
-              {copied ? "📋 ХУУЛАГДЛАА" : "📋 КОД ХУУЛАХ"}
-            </button>
-
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all transform active:scale-95 shadow-lg shadow-indigo-200"
-            >
-              Нүүр хуудас руу буцах
-            </button>
-          </div>
-
-          <p className="mt-8 text-[9px] text-slate-300 font-bold leading-relaxed uppercase">
-            Энэ кодыг ашиглан хүсэлтийнхээ <br /> хариуг шалгах боломжтой.
-          </p>
+          <button
+            onClick={() => (window.location.href = "/")}
+            className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-black active:scale-95 transition-all"
+          >
+            Нүүр хуудас руу буцах
+          </button>
         </div>
       </div>
     );
@@ -193,54 +139,47 @@ export default function Asuult() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] py-12 px-4 font-sans text-slate-900">
-      <div className="max-w-2xl mx-auto space-y-10 pb-24">
-        {/* Header */}
-        <header className="text-center space-y-3">
-          <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-2">
-            Safe Space
+      {toast.show && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] bg-red-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-black text-[10px] uppercase tracking-widest animate-in slide-in-from-top-10">
+          {toast.message}
+        </div>
+      )}
+
+      <div className="max-w-6xl mx-auto space-y-12">
+        <header className="text-center space-y-4">
+          <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-[0.3em]">
+            Safe Space System
           </div>
-          <h1 className="text-4xl font-black text-slate-900 italic uppercase tracking-tighter sm:text-5xl">
-            Тусламж{" "}
-            <span className="text-indigo-600 underline decoration-indigo-200">
-              авах
-            </span>
+          <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter text-slate-900">
+            Тусламж <span className="text-indigo-600">авах</span>
           </h1>
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-            Анкет бөглөх хэсэг
-          </p>
         </header>
 
-        {/* Questions Grid */}
-        <div className="grid gap-6">
+        {/* Асуултууд: Компьютер дээр 2 багана, Утас дээр 1 багана */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {questions.map((q) => (
             <div
               key={q.id}
-              className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300"
+              className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all"
             >
-              <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-3 leading-tight">
-                <span className="w-6 h-6 bg-slate-900 text-white rounded-lg flex items-center justify-center text-[10px] shrink-0 italic">
-                  {q.id}
-                </span>
+              <h3 className="text-[12px] font-black uppercase tracking-tight text-slate-800 mb-6 leading-tight">
                 {q.question}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-wrap gap-2">
                 {q.options.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => setAnswers({ ...answers, [q.id]: opt })}
-                    className={`p-4 rounded-2xl text-[11px] font-black transition-all border-2 text-left flex justify-between items-center group
+                    className={`px-4 py-3 rounded-xl text-[10px] font-black transition-all border-2 uppercase tracking-tighter
                       ${
                         answers[q.id] === opt
                           ? opt.includes("🚨")
-                            ? "border-red-500 bg-red-50 text-red-900"
-                            : "border-indigo-600 bg-indigo-50 text-indigo-900"
-                          : "border-slate-50 bg-slate-50/50 text-slate-500 hover:border-indigo-100 hover:bg-white"
+                            ? "bg-red-600 border-red-600 text-white shadow-lg"
+                            : "bg-indigo-600 border-indigo-600 text-white shadow-lg"
+                          : "bg-slate-50 border-transparent text-slate-400 hover:bg-slate-100"
                       }`}
                   >
                     {opt}
-                    <div
-                      className={`w-2 h-2 rounded-full transition-all ${answers[q.id] === opt ? (opt.includes("🚨") ? "bg-red-500 scale-125" : "bg-indigo-600 scale-125") : "bg-slate-200 opacity-0 group-hover:opacity-100"}`}
-                    />
                   </button>
                 ))}
               </div>
@@ -248,85 +187,73 @@ export default function Asuult() {
           ))}
         </div>
 
-        {/* Extra Info Section */}
-        <div className="bg-indigo-900 p-8 rounded-[3rem] shadow-2xl space-y-6 text-white">
-          <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300 ml-2">
-              Нэмэлт тайлбар (заавал биш)
+        {/* Текст ба Зураг оруулах хэсэг */}
+        <div className="bg-slate-900 p-8 md:p-12 rounded-[4rem] shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+          <div className="md:col-span-2 space-y-4">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">
+              Нэмэлт тайлбар
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-40 p-6 bg-indigo-800/50 rounded-[2rem] border-none outline-none text-sm font-bold resize-none focus:ring-4 ring-indigo-500/20 placeholder:text-indigo-400/50"
-              placeholder="Танд тохиолдсон зүйлийг энд дэлгэрэнгүй бичиж болно..."
+              className="w-full h-36 p-8 bg-slate-800/50 rounded-[2.5rem] border-none outline-none text-white text-sm font-bold resize-none focus:ring-4 ring-indigo-500/10 transition-all placeholder:text-slate-700"
+              placeholder="Тохиолдсон зүйлийг энд дэлгэрэнгүй бичиж болно..."
             />
           </div>
-
-          <div className="space-y-4 pt-4">
-            <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300 ml-2">
-              Зураг эсвэл нотлох баримт
-            </label>
-            <div className="flex flex-wrap gap-4 items-center">
-              <label className="cursor-pointer group relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files[0];
-                    if (f) {
-                      setFile(f);
-                      setPreview(URL.createObjectURL(f));
-                    }
-                  }}
-                  className="hidden"
-                />
-                <div className="w-20 h-20 bg-indigo-800 rounded-3xl flex items-center justify-center text-2xl border-2 border-dashed border-indigo-600 transition-all group-hover:border-white group-hover:bg-indigo-700">
-                  📸
-                </div>
-              </label>
-
-              {preview && (
-                <div className="relative group">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <label className="cursor-pointer group relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files[0];
+                  if (f) {
+                    setFile(f);
+                    setPreview(URL.createObjectURL(f));
+                  }
+                }}
+                className="hidden"
+              />
+              {preview ? (
+                <div className="relative animate-in zoom-in">
                   <img
                     src={preview}
-                    className="w-20 h-20 object-cover rounded-3xl border-2 border-white/20"
+                    className="w-32 h-32 object-cover rounded-[2.5rem] border-4 border-slate-800 shadow-2xl"
                     alt="Preview"
                   />
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       setFile(null);
                       setPreview(null);
                     }}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs font-black shadow-lg"
+                    className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-8 h-8 text-[10px] font-black shadow-xl"
                   >
                     ✕
                   </button>
                 </div>
+              ) : (
+                <div className="w-32 h-32 bg-slate-800 rounded-[2.5rem] flex items-center justify-center text-4xl border-2 border-dashed border-slate-700 group-hover:border-indigo-500 transition-all shadow-inner">
+                  📸
+                </div>
               )}
-              {!preview && (
-                <p className="text-[10px] text-indigo-400 font-bold uppercase italic">
-                  Зураг хавсаргах боломжтой
-                </p>
-              )}
-            </div>
+            </label>
+            <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest italic">
+              Зураг хавсаргах
+            </p>
           </div>
         </div>
 
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full py-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.3em] shadow-2xl shadow-indigo-200 transition-all transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
-        >
-          {loading ? (
-            <span className="flex items-center justify-center gap-3">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Илгээж байна...
-            </span>
-          ) : (
-            "Анкет илгээх"
-          )}
-        </button>
+        {/* Илгээх товчлуур */}
+        <div className="max-w-md mx-auto pb-20">
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+          >
+            {loading ? "Илгээж байна..." : "АНКЕТ ИЛГЭЭХ"}
+          </button>
+        </div>
       </div>
     </div>
   );

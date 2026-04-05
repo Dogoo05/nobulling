@@ -5,6 +5,7 @@ export default function Nuurhuudas() {
   const [searchId, setSearchId] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const symptoms = [
     "Найз нөхдөөсөө хөндийрөх",
@@ -17,17 +18,18 @@ export default function Nuurhuudas() {
     const cleanId = searchId.trim().toUpperCase();
     if (!cleanId) return;
     setLoading(true);
+    setError("");
     try {
       const res = await fetch(`/api/huselt?id=${cleanId}`);
       const data = await res.json();
       if (data.success && data.data) {
         setSearchResult(data.data);
       } else {
-        alert("Код олдсонгүй.");
+        setError("Багш хараахан хариу өгөөгүй байна. Түр хүлээнэ үү. ⏳");
         setSearchResult(null);
       }
     } catch (e) {
-      alert("Алдаа гарлаа.");
+      setError("Алдаа гарлаа.");
     } finally {
       setLoading(false);
     }
@@ -35,107 +37,99 @@ export default function Nuurhuudas() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans selection:bg-indigo-100 overflow-x-hidden">
-      {/* --- Floating SOS Button --- */}
-      <Link href="/yar">
-        <button className="fixed bottom-8 right-8 z-50 w-16 h-16 bg-red-600 rounded-full shadow-2xl flex items-center justify-center text-2xl animate-bounce border-4 border-white text-white">
-          🚨
-        </button>
+      {/* --- 1. URGENT HEADER (Compact) --- */}
+      <Link href="/yar" className="block relative z-50 group">
+        <div className="bg-red-600 hover:bg-red-700 py-3 px-4 flex items-center justify-center gap-3 transition-colors">
+          <span className="text-lg animate-bounce">🚨</span>
+          <span className="text-white font-black text-[10px] uppercase tracking-widest italic">
+            Яаралтай тусламж хэрэгтэй юу?{" "}
+            <span className="underline ml-2">Энд дар →</span>
+          </span>
+        </div>
       </Link>
 
-      {/* --- Navigation --- */}
-      <nav className="max-w-7xl mx-auto px-6 py-8 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-40">
+      {/* --- Navigation (Tightened) --- */}
+      <nav className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-40 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-indigo-100">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black italic shadow-md">
             AS
           </div>
-          <span className="font-black text-xl tracking-tighter uppercase italic text-slate-800">
+          <span className="font-black text-lg tracking-tighter uppercase italic text-slate-800">
             SafeSpace
           </span>
         </div>
-        <div className="flex gap-4">
-          <Link
-            href="/asuult"
-            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors"
-          >
-            Анкет бөглөх
-          </Link>
-        </div>
+        <Link
+          href="/asuult"
+          className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all"
+        >
+          Анкет
+        </Link>
       </nav>
 
-      {/* --- Hero & Interaction Section --- */}
-      <main className="max-w-7xl mx-auto px-6 pt-8 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        <div className="space-y-8 text-center lg:text-left">
-          <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-            Бид хамтдаа хүчтэй 🤝
+      {/* --- Hero Section (Reduced Padding & Gap) --- */}
+      <main className="max-w-7xl mx-auto px-4 pt-6 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div className="space-y-4 text-center lg:text-left">
+          <div className="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest">
+            Бид хамтдаа 🤝
           </div>
-          <h1 className="text-6xl md:text-8xl font-black text-slate-900 leading-[0.85] tracking-tighter uppercase italic">
+          <h1 className="text-5xl md:text-7xl font-black text-slate-900 leading-[0.9] tracking-tighter uppercase italic">
             Чи ганцаараа <br />
             <span className="text-indigo-600">биш.</span>
           </h1>
-          <p className="text-slate-400 font-bold text-sm md:text-base leading-relaxed max-w-sm mx-auto lg:mx-0 uppercase tracking-tight">
-            Дээрэлхэлтийн эсрэг нэгдэж, бие биедээ тусалъя. Тусламж авах нь
-            хамгийн зөв алхам юм.
+          <p className="text-slate-400 font-bold text-[11px] leading-snug max-w-[280px] mx-auto lg:mx-0 uppercase tracking-tight">
+            Дээрэлхэлтийн эсрэг нэгдэж, бие биедээ тусалъя. Тусламж авах нь зөв
+            алхам.
           </p>
-          <div className="flex justify-center lg:justify-start">
+          <div className="flex justify-center lg:justify-start pt-2">
             <Link
               href="/asuult"
-              className="bg-indigo-600 text-white px-12 py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+              className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all"
             >
               Тусламж хүсэх →
             </Link>
           </div>
         </div>
 
-        {/* --- Right Column: SOS and Search --- */}
-        <div className="space-y-6 w-full max-w-md mx-auto">
-          {/* 1. ЯАРАЛТАЙ ТУСЛАМЖ (ДЭЭР НЬ) */}
-          <Link href="/yar" className="block group">
-            <div className="bg-red-600 p-8 rounded-[2.5rem] shadow-xl shadow-red-100 border border-red-500 flex items-center justify-between transition-all group-hover:scale-[1.02] group-active:scale-95">
-              <div className="text-white">
-                <h2 className="text-xl font-black uppercase italic tracking-tighter leading-none">
-                  Яаралтай тусламж
-                </h2>
-                <p className="text-red-200 text-[9px] font-black uppercase tracking-widest mt-2">
-                  Яг одоо тусламж хэрэгтэй бол энд дар
-                </p>
-              </div>
-              <span className="text-4xl group-hover:animate-bounce">🚨</span>
-            </div>
-          </Link>
-
-          {/* 2. ХАРИУ ШАЛГАХ (ДООРОО) */}
-          <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-100 border border-slate-100 relative overflow-hidden group">
-            <div className="relative z-10 space-y-6">
+        {/* --- Search Section (Compact Card) --- */}
+        <div className="w-full max-w-sm mx-auto">
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50 relative overflow-hidden">
+            <div className="relative z-10 space-y-4">
               <div>
-                <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-800 leading-none">
+                <h2 className="text-lg font-black uppercase italic tracking-tighter text-slate-800 leading-none">
                   Хариу шалгах
                 </h2>
-                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2">
-                  Өөрийн нууц кодыг оруулж хариугаа хар
+                <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-1">
+                  Нууц кодыг оруулна уу
                 </p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <input
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
                   placeholder="ID: 2026-ABCD"
-                  className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-50 p-5 rounded-2xl text-sm font-bold outline-none transition-all placeholder:text-slate-200"
+                  className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-100 p-4 rounded-xl text-xs font-bold outline-none transition-all placeholder:text-slate-200"
                 />
                 <button
                   onClick={handleSearch}
                   disabled={loading}
-                  className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"
+                  className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-md"
                 >
-                  {loading ? "Хайж байна..." : "Шалгах"}
+                  {loading ? "..." : "Шалгах"}
                 </button>
               </div>
 
+              {error && (
+                <p className="text-[9px] font-black text-red-500 uppercase text-center">
+                  {error}
+                </p>
+              )}
+
               {searchResult && (
-                <div className="pt-6 border-t border-slate-50 animate-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex justify-between items-center mb-3">
+                <div className="pt-4 border-t border-slate-50 animate-in slide-in-from-bottom-2">
+                  <div className="flex justify-between items-center mb-2">
                     <span
-                      className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${searchResult.status === "Шийдвэрлэсэн" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}
+                      className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${searchResult.status === "Шийдвэрлэсэн" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}
                     >
                       {searchResult.status || "Хүлээгдэж буй"}
                     </span>
@@ -146,13 +140,13 @@ export default function Nuurhuudas() {
                       ✕
                     </button>
                   </div>
-                  <div className="p-5 bg-indigo-50/50 rounded-[2rem] border border-indigo-50">
-                    <p className="text-[8px] font-black text-indigo-300 uppercase mb-2 tracking-widest italic">
+                  <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-50">
+                    <p className="text-[8px] font-black text-indigo-300 uppercase mb-1 italic tracking-widest">
                       Багшийн хариу:
                     </p>
-                    <p className="text-xs font-bold text-indigo-900 leading-relaxed italic">
+                    <p className="text-[10px] font-bold text-indigo-900 leading-relaxed italic">
                       {searchResult.adminReply ||
-                        "Таны хүсэлтийг хүлээн авлаа. Багш удахгүй хариу бичих болно."}
+                        "Багш удахгүй хариу бичих болно."}
                     </p>
                   </div>
                 </div>
@@ -162,16 +156,17 @@ export default function Nuurhuudas() {
         </div>
       </main>
 
-      {/* --- Types Grid (Буцааж нэмэв) --- */}
-      <section className="bg-white py-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
+      {/* --- Types Grid (Tightened Padding & Gap) --- */}
+      <section className="bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-black text-slate-900 uppercase italic tracking-tighter">
               Дээрэлхэлт гэж юу вэ?
             </h2>
-            <div className="w-16 h-1 bg-indigo-600 mx-auto mt-4 rounded-full"></div>
+            <div className="w-12 h-1 bg-indigo-600 mx-auto mt-2 rounded-full"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* gap-8-аас gap-3 болгож багасгав */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
               {
                 title: "Сэтгэлзүйн",
@@ -191,15 +186,13 @@ export default function Nuurhuudas() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="bg-slate-50/50 p-10 rounded-[3rem] border border-slate-50 hover:shadow-xl transition-all group"
+                className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-50 hover:bg-white hover:shadow-lg transition-all flex flex-col items-center text-center"
               >
-                <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
-                  {item.icon}
-                </div>
-                <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-800 mb-3">
+                <div className="text-3xl mb-3">{item.icon}</div>
+                <h3 className="text-md font-black uppercase italic tracking-tighter text-slate-800 mb-1">
                   {item.title}
                 </h3>
-                <p className="text-slate-400 text-[11px] font-bold leading-relaxed uppercase tracking-tight">
+                <p className="text-slate-400 text-[10px] font-bold leading-tight uppercase tracking-tight max-w-[180px]">
                   {item.desc}
                 </p>
               </div>
@@ -208,19 +201,19 @@ export default function Nuurhuudas() {
         </div>
       </section>
 
-      {/* --- Symptoms Section (Буцааж нэмэв) --- */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
-        <h2 className="text-2xl font-black text-center mb-12 uppercase italic tracking-tighter text-slate-800">
-          Анхаарах шинж тэмдгүүд
+      {/* --- Symptoms Section (Compact Grid) --- */}
+      <section className="max-w-5xl mx-auto px-4 py-12">
+        <h2 className="text-lg font-black text-center mb-6 uppercase italic tracking-tighter text-slate-800 underline decoration-indigo-100 decoration-4 underline-offset-4">
+          Шинж тэмдгүүд
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {symptoms.map((s, i) => (
             <div
               key={i}
-              className="flex items-center gap-5 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm"
+              className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm"
             >
-              <div className="w-3 h-3 bg-indigo-600 rounded-full shadow-lg shadow-indigo-100"></div>
-              <span className="font-black text-slate-700 text-xs uppercase tracking-tight">
+              <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
+              <span className="font-black text-slate-700 text-[9px] uppercase tracking-tight">
                 {s}
               </span>
             </div>
@@ -228,50 +221,10 @@ export default function Nuurhuudas() {
         </div>
       </section>
 
-      {/* --- Action Cards (Буцааж нэмэв) --- */}
-      <section className="max-w-7xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white shadow-2xl">
-            <h3 className="text-2xl font-black mb-8 uppercase italic tracking-tighter">
-              Хэрэв чи өртсөн бол:
-            </h3>
-            <ul className="space-y-5 text-[11px] font-black uppercase tracking-widest opacity-80">
-              <li className="flex items-start gap-3">
-                <span className="text-indigo-400">●</span> Итгэдэг хүндээ заавал
-                хэлээрэй.
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-indigo-400">●</span> Өөрийгөө битгий
-                буруутга.
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-indigo-400">●</span> Ганцаараа битгий бай.
-              </li>
-            </ul>
-          </div>
-          <div className="bg-indigo-600 p-12 rounded-[3.5rem] text-white shadow-2xl shadow-indigo-100">
-            <h3 className="text-2xl font-black mb-8 uppercase italic tracking-tighter">
-              Хэрэв чи харсан бол:
-            </h3>
-            <ul className="space-y-5 text-[11px] font-black uppercase tracking-widest">
-              <li className="flex items-start gap-3">
-                <span>●</span> Үл тоож болохгүй.
-              </li>
-              <li className="flex items-start gap-3">
-                <span>●</span> Найзыгаа дэмжиж хамт бай.
-              </li>
-              <li className="flex items-start gap-3">
-                <span>●</span> Багш, эцэг эхэд мэдэгд.
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* --- Footer --- */}
-      <footer className="py-16 text-center border-t border-slate-50">
-        <p className="text-slate-200 text-[10px] font-black uppercase tracking-[0.5em]">
-          © 2026 ANTI-BULLYING PROJECT
+      {/* --- Footer (Minimalist) --- */}
+      <footer className="py-12 text-center border-t border-slate-50 bg-white">
+        <p className="text-slate-200 text-[8px] font-black uppercase tracking-[0.4em]">
+          © 2026 SAFE SPACE PROJECT • UB
         </p>
       </footer>
     </div>
