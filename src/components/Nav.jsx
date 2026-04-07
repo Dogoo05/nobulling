@@ -7,8 +7,6 @@ export default function Nav() {
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-indigo-100 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-        {/* Logo Section */}
-
         <Link href="/" className="flex items-center gap-4 group">
           <div className="relative">
             <img
@@ -28,7 +26,6 @@ export default function Nav() {
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-10">
           <div className="flex items-center gap-8 text-[15px] font-bold text-slate-600">
             <Link href="/" className="hover:text-indigo-600 transition-colors">
@@ -49,8 +46,6 @@ export default function Nav() {
             Админ хэсэг
           </Link>
         </div>
-
-        {/* Mobile Toggle Button */}
         <div className="md:hidden">
           <button
             className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all focus:outline-none"
@@ -88,8 +83,6 @@ export default function Nav() {
           </button>
         </div>
       </div>
-
-      {/* Mobile Menu */}
       <div
         className={`md:hidden bg-white border-slate-100 overflow-hidden transition-all duration-300 ease-in-out ${
           isOpen ? "max-h-80" : "max-h-0"

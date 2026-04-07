@@ -12,20 +12,19 @@ export default async function handler(req, res) {
         ? client.db("test")
         : client.connection.db;
 
-    // --- GET: ХАЙЛТ ХИЙХ ЭСВЭЛ БҮХ ДАТАГ АВАХ ---
     if (req.method === "GET") {
       const { id } = req.query;
 
-      // Хэрэв URL дээр ?id=... гэж ирсэн бол (Хэрэглэгч хариу шалгах үед)
+
       if (id) {
         const cleanId = id.toUpperCase().trim();
 
-        // 1. Эхлээд энгийн анкет дотроос хайна
+
         let foundData = await db
           .collection("answers")
           .findOne({ customId: cleanId });
 
-        // 2. Хэрэв олдохгүй бол яаралтай тусламж дотроос хайна
+
         if (!foundData) {
           foundData = await db
             .collection("sos_requests")
@@ -42,7 +41,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // Админ панельд зориулж бүх датаг нэгтгэж харуулах
+
       const [normal, sos] = await Promise.all([
         db.collection("answers").find({}).toArray(),
         db.collection("sos_requests").find({}).toArray(),
@@ -54,7 +53,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data: allData });
     }
 
-    // --- POST: ШИНЭ ХҮСЭЛТ ХАДГАЛАХ ---
     if (req.method === "POST") {
       const { answers, description, imageUrl, isUrgent } = req.body;
       const isSOS =
@@ -86,7 +84,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, customId });
     }
 
-    // --- PATCH: БАГШИЙН ХАРИУ ШИНЭЧЛЭХ ---
     if (req.method === "PATCH") {
       const { id, status, adminReply } = req.body;
       const updateData = {
@@ -108,7 +105,6 @@ export default async function handler(req, res) {
         .json({ success: false, error: "Шинэчлэх дата олдсонгүй" });
     }
 
-    // --- DELETE: УСТГАХ ---
     if (req.method === "DELETE") {
       const { id } = req.query;
       await db.collection("answers").deleteOne({ customId: id });

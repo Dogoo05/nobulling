@@ -3,7 +3,7 @@ import clientPromise from "@/lib/mongodb";
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "10mb", // Том хэмжээний зураг авахыг зөвшөөрөх
+      sizeLimit: "10mb", 
     },
   },
 };
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       const result = await db.collection("answers").insertOne({
         username,
         answers,
-        imageUrl, // Энд зураг текст хэлбэрээр (Base64) шууд хадгалагдана
+        imageUrl, 
         createdAt: new Date(),
       });
 

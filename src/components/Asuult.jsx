@@ -77,7 +77,6 @@ export default function Asuult() {
   };
 
   const handleSubmit = async () => {
-    // 1. Бүх асуултад хариулсан эсэхийг шалгах
     if (Object.keys(answers).length < questions.length) {
       alert("Бүх асуултад хариулна уу!");
       return;
@@ -87,7 +86,7 @@ export default function Asuult() {
     let finalImageUrl = "";
 
     try {
-      // 2. Зураг байгаа бол Cloudinary руу хуулах
+
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
@@ -103,14 +102,10 @@ export default function Asuult() {
           finalImageUrl = cloudData.secure_url;
         }
       }
-
-      // 3. УХААЛАГ SOS ШАЛГАЛТ:
-      // Хэрэв аль нэг хариулт нь "🚨 SOS" байвал auto-угаар isUrgent: true болгоно
       const hasSOS = Object.values(answers).some((val) =>
         val.includes("🚨 SOS"),
       );
 
-      // 4. БЭКЕНД РҮҮ ИЛГЭЭХ
       const res = await fetch("/api/huselt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,7 +113,7 @@ export default function Asuult() {
           answers,
           description,
           imageUrl: finalImageUrl,
-          isUrgent: hasSOS, // SOS сонгосон бол автоматаар яаралтай болно
+          isUrgent: hasSOS, 
         }),
       });
 
@@ -219,7 +214,6 @@ export default function Asuult() {
           ))}
         </div>
 
-        {/* Тайлбар ба Зураг хэсэг */}
         <div className="bg-slate-900 p-8 rounded-[3rem] shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-8 items-center border border-white/5">
           <div className="md:col-span-2">
             <textarea

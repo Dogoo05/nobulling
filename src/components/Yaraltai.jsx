@@ -15,8 +15,6 @@ export default function Yaraltai() {
       setPreview(URL.createObjectURL(selectedFile));
     }
   };
-
-  // Зургийг жижигсгэх (Таны өөрийн функц - маш сайн!)
   const processImage = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -60,21 +58,20 @@ export default function Yaraltai() {
       let imgData = "";
       if (file) imgData = await processImage(file);
 
-      // Backend рүү явуулах дата
       const res = await fetch("/api/huselt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          answers: { төрөл: "🚨 ЯАРАЛТАЙ SOS" }, // Backend answers хүлээж авдаг тул
+          answers: { төрөл: "🚨 ЯАРАЛТАЙ SOS" },
           description: description,
           imageUrl: imgData,
-          isUrgent: true, // Энэ утгаар Backend "sos_requests" коллекци руу хийнэ
+          isUrgent: true,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        setSubmittedId(data.customId); // Backend-ээс ирсэн албан ёсны ID-г ашиглана
+        setSubmittedId(data.customId);
       } else {
         alert("Алдаа гарлаа: " + data.error);
       }

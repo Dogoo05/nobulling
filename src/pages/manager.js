@@ -73,7 +73,7 @@ export default function Manager() {
     [data],
   );
 
-  // ХАРИУ ИЛГЭЭХ ФУНКЦ (ЗАСВАР ОРСОН)
+
   const handleResolve = async (customId) => {
     if (!reply.trim()) {
       showToast("Хариу бичнэ үү!", "error");
@@ -86,7 +86,7 @@ export default function Manager() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: customId, // Энэ нь '20260405-PDBJ' гэх мэт утга байна
+          id: customId,
           status: "Шийдвэрлэсэн",
           adminReply: reply,
         }),
@@ -102,7 +102,7 @@ export default function Manager() {
         }));
         setReply("");
         showToast("Хариу амжилттай илгээгдлээ ✅", "success");
-        fetchData(false); // Жагсаалтыг шинэчлэх
+        fetchData(false); 
       } else {
         showToast(result.error || "Алдаа гарлаа", "error");
       }
@@ -114,11 +114,10 @@ export default function Manager() {
     }
   };
 
-  // УСТГАХ ФУНКЦ (ЗАСВАР ОРСОН)
   const handleDelete = async (id) => {
     if (!confirm("Энэ хүсэлтийг устгахдаа итгэлтэй байна уу?")) return;
     try {
-      // Backend таны customId-г 'id' гэсэн query parameter-ээр авч байгаа
+      
       const res = await fetch(`/api/huselt?id=${id}`, {
         method: "DELETE",
       });

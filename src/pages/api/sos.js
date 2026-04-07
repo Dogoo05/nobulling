@@ -1,14 +1,13 @@
-import clientPromise from "../../lib/mongodb"; // lib/mongodb.js доторх холболтоо ашиглана
+import clientPromise from "../../lib/mongodb";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const client = await clientPromise;
-      const db = client.db("deerlehelt"); // Өөрийн дата баазын нэрийг бичээрэй
+      const db = client.db("deerlehelt");
 
       const { customId, description, status, createdAt } = req.body;
 
-      // Шууд Insert хийх
       const result = await db.collection("sos_requests").insertOne({
         customId,
         description,

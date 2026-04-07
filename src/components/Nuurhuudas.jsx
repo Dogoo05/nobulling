@@ -14,7 +14,6 @@ export default function Nuurhuudas() {
     "Өөрийгөө буруутгах мэдрэмж",
   ];
 
-  // Ухаалаг хайлтын функц
   const handleSearch = async () => {
     let cleanId = searchId.trim().toUpperCase();
     if (!cleanId) return;
@@ -24,13 +23,9 @@ export default function Nuurhuudas() {
     setSearchResult(null);
 
     try {
-      // 1. Эхний оролдлого: encodeURIComponent ашиглан аюулгүй хайх
-      // Энэ нь 2026-ABCD доторх "-" тэмдэгтийг зөв дамжуулна
       const url = `/api/huselt?id=${encodeURIComponent(cleanId)}`;
       let res = await fetch(url);
       let data = await res.json();
-
-      // 2. Хоёр дахь оролдлого: Хэрэв олдохгүй бол "SOS-" залгаж хайж үзэх
       if (!data.success && !cleanId.startsWith("SOS-")) {
         const sosId = `SOS-${cleanId}`;
         const resSos = await fetch(
@@ -57,7 +52,6 @@ export default function Nuurhuudas() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans selection:bg-indigo-100 overflow-x-hidden">
-      {/* --- 1. ЯАРАЛТАЙ HEADER --- */}
       <Link href="/yar" className="block relative z-50 group">
         <div className="bg-red-600 hover:bg-red-700 py-3 px-4 flex items-center justify-center gap-3 transition-colors shadow-lg">
           <span className="text-lg animate-bounce">🚨</span>
@@ -69,8 +63,6 @@ export default function Nuurhuudas() {
           </span>
         </div>
       </Link>
-
-      {/* --- Navigation --- */}
       <nav className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center bg-white/50 backdrop-blur-sm sticky top-0 z-40 border-b border-slate-100">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black italic shadow-md">
@@ -87,8 +79,6 @@ export default function Nuurhuudas() {
           Анкет
         </Link>
       </nav>
-
-      {/* --- Hero & Search Section --- */}
       <main className="max-w-7xl mx-auto px-4 pt-6 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div className="space-y-4 text-center lg:text-left">
           <div className="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest">
@@ -111,8 +101,6 @@ export default function Nuurhuudas() {
             </Link>
           </div>
         </div>
-
-        {/* --- Хариу шалгах Search Card --- */}
         <div className="w-full max-w-sm mx-auto">
           <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 border border-slate-50 relative overflow-hidden">
             <div className="relative z-10 space-y-4">
@@ -197,8 +185,6 @@ export default function Nuurhuudas() {
           </div>
         </div>
       </main>
-
-      {/* --- Бусад хэсэг (Дээрэлхэлт, Шинж тэмдэг) --- */}
       <section className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-xl font-black text-slate-900 uppercase italic tracking-tighter mb-8">
