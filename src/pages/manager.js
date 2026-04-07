@@ -1,54 +1,92 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
+// Асуултуудын нэрс
 const questionTexts = {
-  1: "Дээрэлхэлтийн хэлбэр",
-  2: "Анх эхэлсэн хугацаа",
+  1: "Хэлбэр",
+  2: "Хугацаа",
   3: "Давтамж",
-  4: "Хаана болдог",
-  5: "Хэн дарамталдаг",
-  6: "Хүнд ярьсан эсэх",
-  7: "Тэдний хандлага",
-  8: "Сэтгэл санааны байдал",
-  9: "Юу тус болох",
-  10: "Чухал хэрэгцээ",
+  4: "Хаана",
+  5: "Хэн",
+  6: "Ярьсан эсэх",
+  7: "Хандлага",
+  8: "Сэтгэл санаа",
+  9: "Тусламж",
+  10: "Хэрэгцээ",
 };
 
-const types = ["Бүгд", "ЯАРАЛТАЙ", "Үг хэлээр", "Бие махбодиор", "Цахимаар"];
+// Төрлүүдийн сонголт
+const types = ["Бүх төрөл", "Үг хэлээр", "Бие махбодиор", "Цахимаар", "Бусад"];
+
+const CustomSelect = ({ options, value, onChange, label }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target))
+        setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative w-full md:w-auto" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-white px-4 py-3 rounded-2xl font-black uppercase text-[10px] outline-none border border-slate-100 cursor-pointer shadow-sm hover:bg-slate-50 transition-all flex justify-between items-center min-w-[150px]"
+      >
+        <span className="tracking-wider text-slate-400 mr-2">{label}:</span>
+        <span className="text-slate-700">{value}</span>
+        <span
+          className={`ml-2 transition-transform duration-300 opacity-40 ${isOpen ? "rotate-180" : ""}`}
+        >
+          ▼
+        </span>
+      </button>
+      {isOpen && (
+        <div className="absolute top-[110%] left-0 w-full bg-white rounded-2xl shadow-2xl border border-slate-50 z-[100] py-2 animate-in fade-in zoom-in-95 duration-200">
+          {options.map((opt) => (
+            <div
+              key={opt}
+              onClick={() => {
+                onChange(opt);
+                setIsOpen(false);
+              }}
+              className={`px-4 py-3 text-[10px] font-black uppercase cursor-pointer ${value === opt ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:bg-slate-50"}`}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function Manager() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Бүгд");
-  const [filterType, setFilterType] = useState("Бүгд");
+  const [loginError, setLoginError] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Бүх төлөв");
+  const [filterType, setFilterType] = useState("Бүх төрөл");
   const [searchId, setSearchId] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [reply, setReply] = useState("");
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "info",
-  });
-
-  const showToast = (message, type = "info") => {
-    setToast({ show: true, message, type });
-    setTimeout(
-      () => setToast({ show: false, message: "", type: "info" }),
-      3000,
-    );
-  };
 
   const fetchData = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
       const res = await fetch("/api/huselt");
       const d = await res.json();
-      if (d.success) {
-        setData(d.data || []);
-      }
+      if (d.success) setData(d.data || []);
     } catch (err) {
-      showToast("Дата уншихад алдаа гарлаа", "error");
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -62,92 +100,65 @@ export default function Manager() {
     }
   }, [isLoggedIn, fetchData]);
 
-  const stats = useMemo(
-    () => ({
-      total: data.length,
-      pending: data.filter((d) => d.status !== "Шийдвэрлэсэн").length,
-      resolved: data.filter((d) => d.status === "Шийдвэрлэсэн").length,
-      urgent: data.filter((d) => d.isUrgent || d.customId?.startsWith("SOS"))
-        .length,
-    }),
-    [data],
-  );
-
-
-  const handleResolve = async (customId) => {
-    if (!reply.trim()) {
-      showToast("Хариу бичнэ үү!", "error");
-      return;
-    }
-
-    setLoading(true);
+  const handleResolve = async () => {
+    if (!selectedItem || !reply.trim()) return;
+    setSubmitting(true);
     try {
       const res = await fetch("/api/huselt", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: customId,
+          id: selectedItem.customId,
           status: "Шийдвэрлэсэн",
           adminReply: reply,
         }),
       });
-
       const result = await res.json();
-
       if (result.success) {
-        setSelectedItem((prev) => ({
-          ...prev,
-          status: "Шийдвэрлэсэн",
-          adminReply: reply,
-        }));
-        setReply("");
-        showToast("Хариу амжилттай илгээгдлээ ✅", "success");
-        fetchData(false); 
-      } else {
-        showToast(result.error || "Алдаа гарлаа", "error");
+        setSubmitSuccess(true);
+        setTimeout(() => {
+          setSelectedItem((prev) => ({
+            ...prev,
+            status: "Шийдвэрлэсэн",
+            adminReply: reply,
+          }));
+          setData((prev) =>
+            prev.map((item) =>
+              item.customId === selectedItem.customId
+                ? { ...item, status: "Шийдвэрлэсэн", adminReply: reply }
+                : item,
+            ),
+          );
+          setReply("");
+          setSubmitSuccess(false);
+        }, 1500);
       }
     } catch (err) {
-      console.error("Error:", err);
-      showToast("Сервертэй холбогдоход алдаа гарлаа", "error");
+      console.error(err);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Энэ хүсэлтийг устгахдаа итгэлтэй байна уу?")) return;
-    try {
-      
-      const res = await fetch(`/api/huselt?id=${id}`, {
-        method: "DELETE",
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        setSelectedItem(null);
-        showToast("Амжилттай устгагдлаа", "success");
-        fetchData(false);
-      } else {
-        showToast(result.error || "Устгаж чадсангүй", "error");
-      }
-    } catch (e) {
-      showToast("Серверийн алдаа гарлаа", "error");
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === "admin123") {
+      setIsLoggedIn(true);
+      setLoginError("");
+    } else {
+      setLoginError("Нууц үг буруу байна!"); //
     }
   };
 
   const filteredData = data.filter((item) => {
     const matchStatus =
-      filterStatus === "Бүгд" ||
+      filterStatus === "Бүх төлөв" ||
       (filterStatus === "Шинэ"
         ? item.status !== "Шийдвэрлэсэн"
         : item.status === filterStatus);
-    let matchType = true;
-    if (filterType === "ЯАРАЛТАЙ")
-      matchType = item.isUrgent || item.customId?.startsWith("SOS");
-    else if (filterType !== "Бүгд")
-      matchType = Object.values(item.answers || {}).some((v) =>
-        v.includes(filterType),
-      );
+    const matchType =
+      filterType === "Бүх төрөл" ||
+      (item.answers && item.answers[1] === filterType);
     const matchSearch = item.customId
       ?.toUpperCase()
       .includes(searchId.toUpperCase().trim());
@@ -156,28 +167,35 @@ export default function Manager() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F1F5F9] p-4 font-sans">
-        <div className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-200 w-full max-w-sm text-center">
-          <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter text-indigo-600 italic">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-6">
+        <div className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md text-center border border-slate-100">
+          <div className="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-indigo-100">
+            <span className="text-white text-3xl font-black italic">S</span>
+          </div>
+          <h1 className="text-2xl font-black mb-2 uppercase text-slate-800">
             Safe Admin
           </h1>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              password === "admin123"
-                ? setIsLoggedIn(true)
-                : alert("Нууц үг буруу!");
-            }}
-          >
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
+            Системийн удирдлага
+          </p>
+          <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-5 bg-slate-50 rounded-2xl mb-4 text-center font-black outline-none border-2 border-transparent focus:border-indigo-200"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setLoginError("");
+              }}
+              className={`w-full p-5 bg-slate-50 rounded-2xl text-center font-black outline-none border-2 transition-all ${loginError ? "border-rose-400 animate-shake" : "border-transparent focus:border-indigo-500"}`}
               placeholder="НУУЦ ҮГ"
             />
-            <button className="w-full p-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">
-              НЭВТРЭХ
+            {loginError && (
+              <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest">
+                {loginError}
+              </p>
+            )}
+            <button className="w-full p-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-[0.3em] hover:bg-indigo-600 transition-all shadow-xl active:scale-[0.98]">
+              Нэвтрэх
             </button>
           </form>
         </div>
@@ -186,175 +204,97 @@ export default function Manager() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-slate-900 font-sans pb-10 text-[11px]">
-      {toast.show && (
-        <div
-          className={`fixed top-6 left-1/2 -translate-x-1/2 z-[1001] px-8 py-4 rounded-2xl shadow-2xl font-black text-[10px] uppercase tracking-widest ${toast.type === "error" ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
-        >
-          {toast.message}
-        </div>
-      )}
-
-      <div className="max-w-5xl mx-auto pt-8 px-4">
-        <header className="flex justify-between items-end mb-8">
+    <div className="min-h-screen bg-[#FBFBFE] pb-20">
+      <div className="max-w-6xl mx-auto pt-8 px-4">
+        <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none">
+            <h1 className="text-2xl font-black italic uppercase tracking-tighter">
               Safe<span className="text-indigo-600">Admin</span>
             </h1>
-            <p className="text-[8px] font-black uppercase text-slate-400 tracking-[0.4em] mt-1">
-              Системийн удирдлага
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              Management Portal
             </p>
           </div>
           <button
             onClick={() => fetchData(true)}
-            className="bg-white px-5 py-2.5 rounded-xl shadow-sm border border-slate-200 text-indigo-600 font-black text-[9px] uppercase hover:bg-slate-50 transition-all"
+            className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
           >
-            🔄 Шинэчлэх
+            Шинэчлэх
           </button>
         </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            {
-              label: "Нийт хүсэлт",
-              val: stats.total,
-              color: "text-slate-800",
-              bg: "bg-white",
-            },
-            {
-              label: "Шинэ хүсэлт",
-              val: stats.pending,
-              color: "text-orange-600",
-              bg: "bg-white",
-              border: "border-l-4 border-l-orange-500",
-            },
-            {
-              label: "Шийдвэрлэсэн",
-              val: stats.resolved,
-              color: "text-green-600",
-              bg: "bg-white",
-              border: "border-l-4 border-l-green-500",
-            },
-            {
-              label: "ЯАРАЛТАЙ (SOS)",
-              val: stats.urgent,
-              color: "text-white",
-              bg: "bg-red-600",
-            },
-          ].map((s, i) => (
-            <div
-              key={i}
-              className={`${s.bg} p-5 rounded-[2rem] border border-slate-100 shadow-sm ${s.border || ""}`}
-            >
-              <p
-                className={`text-[8px] font-black uppercase mb-1 ${s.color === "text-white" ? "text-red-100" : "text-slate-400"}`}
-              >
-                {s.label}
-              </p>
-              <p className={`text-2xl font-black ${s.color}`}>{s.val}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-3 mb-6 bg-white p-3 rounded-[2rem] border border-slate-100 shadow-sm">
-          <input
-            type="text"
-            placeholder="ID-аар хайх..."
-            value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
-            className="flex-1 bg-slate-50 p-3.5 rounded-2xl font-bold outline-none border border-transparent focus:border-indigo-100"
+        {/* Шүүлтүүрүүд */}
+        <div className="flex flex-col md:flex-row gap-3 mb-8 bg-white p-3 rounded-[2rem] border border-slate-100 shadow-sm">
+          <div className="flex-1 relative">
+            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="ID-аар хайх..."
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value)}
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl font-bold text-[11px] outline-none bg-slate-50 border border-transparent focus:border-indigo-100 transition-all"
+            />
+          </div>
+          <CustomSelect
+            options={["Бүх төлөв", "Шинэ", "Шийдвэрлэсэн"]}
+            value={filterStatus}
+            onChange={setFilterStatus}
+            label="Төлөв"
           />
-          <select
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-slate-50 px-5 py-3.5 rounded-2xl font-black uppercase text-[9px] outline-none"
-          >
-            <option value="Бүгд">Бүх Төлөв</option>
-            <option value="Шинэ">Шинэ</option>
-            <option value="Шийдвэрлэсэн">Шийдвэрлэсэн</option>
-          </select>
-          <select
-            onChange={(e) => setFilterType(e.target.value)}
-            className="bg-slate-50 px-5 py-3.5 rounded-2xl font-black uppercase text-[9px] outline-none"
-          >
-            {types.map((t) => (
-              <option key={t} value={t}>
-                {t === "Бүгд" ? "Бүх Төрөл" : t}
-              </option>
-            ))}
-          </select>
+          <CustomSelect
+            options={types}
+            value={filterType}
+            onChange={setFilterType}
+            label="Төрөл"
+          />
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        {/* Хүснэгт */}
+        <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-50">
           <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100 font-black uppercase text-slate-400 text-[8px]">
-                <th className="p-5 pl-8">ID / Хүсэлтийн мэдээлэл</th>
-                <th className="p-5 text-center hidden md:table-cell">Төрөл</th>
-                <th className="p-5 text-center">Төлөв</th>
-                <th className="p-5 pr-8 text-right">Үйлдэл</th>
+            <thead className="bg-slate-50/50 font-black uppercase text-[8px] text-slate-400 tracking-widest">
+              <tr>
+                <th className="p-6 pl-8">Мэдээлэл / ID</th>
+                <th className="p-6 text-center">Төлөв</th>
+                <th className="p-6 pr-8 text-right">Үйлдэл</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-50 text-[11px]">
               {loading ? (
                 <tr>
                   <td
-                    colSpan="4"
-                    className="p-20 text-center font-black text-slate-300 uppercase animate-pulse italic"
+                    colSpan="3"
+                    className="p-20 text-center font-black uppercase text-slate-300 animate-pulse tracking-widest"
                   >
-                    Датаг ачаалж байна...
-                  </td>
-                </tr>
-              ) : filteredData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="4"
-                    className="p-20 text-center font-black text-slate-300 uppercase italic"
-                  >
-                    Мэдээлэл олдсонгүй
+                    Уншиж байна...
                   </td>
                 </tr>
               ) : (
                 filteredData.map((item) => (
                   <tr
                     key={item.customId}
-                    className="group hover:bg-slate-50/80 transition-all cursor-pointer"
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                     onClick={() => setSelectedItem(item)}
                   >
-                    <td className="p-4 pl-8">
-                      <div className="flex items-center gap-4">
-                        <span
-                          className={`text-lg ${item.isUrgent ? "animate-bounce" : "opacity-30"}`}
-                        >
-                          {item.isUrgent ? "🚨" : "📄"}
-                        </span>
-                        <div>
-                          <p
-                            className={`font-black uppercase tracking-tighter text-[12px] ${item.isUrgent ? "text-red-600" : "text-slate-800"}`}
-                          >
-                            {item.customId}
-                          </p>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase truncate max-w-[250px] italic">
-                            {item.description || "Тайлбар байхгүй"}
-                          </p>
-                        </div>
-                      </div>
+                    <td className="p-6 pl-8">
+                      <p className="font-black uppercase text-slate-800 group-hover:text-indigo-600 transition-colors">
+                        {item.customId}
+                      </p>
+                      <p className="text-slate-400 truncate max-w-[300px] font-medium mt-0.5">
+                        {item.description || "Тайлбар байхгүй"}
+                      </p>
                     </td>
-                    <td className="p-4 text-center hidden md:table-cell">
-                      <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-black uppercase text-[8px] border border-indigo-100">
-                        {item.answers?.[1] || "БУСАД"}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center">
+                    <td className="p-6 text-center">
                       <span
-                        className={`px-3 py-1 rounded-full font-black uppercase text-[8px] border ${item.status === "Шийдвэрлэсэн" ? "bg-green-50 text-green-600 border-green-200" : "bg-orange-50 text-orange-600 border-orange-200"}`}
+                        className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider ${item.status === "Шийдвэрлэсэн" ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600 animate-pulse"}`}
                       >
                         {item.status === "Шийдвэрлэсэн" ? "Шийдсэн" : "Шинэ"}
                       </span>
                     </td>
-                    <td className="p-4 pr-8 text-right">
-                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-50 group-hover:bg-indigo-600 group-hover:text-white transition-all text-slate-300 font-black">
-                        →
-                      </div>
+                    <td className="p-6 pr-8 text-right font-black text-slate-400 group-hover:text-indigo-600 transition-all">
+                      ҮЗЭХ →
                     </td>
                   </tr>
                 ))
@@ -364,105 +304,78 @@ export default function Manager() {
         </div>
       </div>
 
+      {/* Модал - Бүх асуултыг харуулах хэсэг */}
       {selectedItem && (
         <div
-          className="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 z-[1000]"
+          className="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-[1000] p-4 animate-in fade-in duration-300"
           onClick={() => setSelectedItem(null)}
         >
           <div
-            className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200"
+            className="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h2
-                    className={`text-2xl font-black uppercase tracking-tighter ${selectedItem.isUrgent ? "text-red-600" : "text-indigo-600"}`}
-                  >
-                    {selectedItem.customId}
-                  </h2>
-                  {selectedItem.isUrgent && (
-                    <span className="bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase animate-pulse">
-                      Яаралтай
-                    </span>
-                  )}
-                </div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
-                  {new Date(selectedItem.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleDelete(selectedItem.customId)}
-                  className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 shadow-sm transition-colors"
-                >
-                  🗑️
-                </button>
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center hover:bg-slate-50 border border-slate-100 shadow-sm font-black transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
+            <div className="p-7 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+              <h2 className="font-black text-xl tracking-tight uppercase text-slate-800">
+                {selectedItem.customId}
+              </h2>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-100 hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-90 font-bold"
+              >
+                ✕
+              </button>
             </div>
 
-            <div className="p-8 overflow-y-auto space-y-8 scrollbar-hide">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {Object.entries(selectedItem.answers || {}).map(
-                  ([key, value]) => (
-                    <div
-                      key={key}
-                      className="p-4 bg-slate-50 rounded-2xl border border-slate-100"
-                    >
-                      <p className="text-[8px] font-black text-slate-400 uppercase mb-1 tracking-widest">
-                        {questionTexts[key] || `Асуулт ${key}`}
-                      </p>
-                      <p className="text-[11px] font-black text-indigo-900 uppercase leading-tight">
-                        {value}
-                      </p>
-                    </div>
-                  ),
-                )}
+            <div className="max-h-[70vh] overflow-y-auto p-8 space-y-8 custom-scrollbar">
+              {/* 10 асуултын хариулт */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(questionTexts).map(([key, label]) => (
+                  <div
+                    key={key}
+                    className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50"
+                  >
+                    <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">
+                      {label}
+                    </p>
+                    <p className="font-black text-slate-700 text-[13px]">
+                      {selectedItem.answers && selectedItem.answers[key]
+                        ? selectedItem.answers[key]
+                        : "—"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                  Нэмэлт тайлбар:
+                </p>
+                <div className="p-6 bg-indigo-50/30 border border-indigo-100/30 rounded-[2rem] text-[13px] font-bold text-slate-700 leading-relaxed italic shadow-inner">
+                  "{selectedItem.description || "Тайлбар байхгүй"}"
+                </div>
               </div>
 
               {selectedItem.imageUrl && (
                 <div className="space-y-3">
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest italic">
-                    Хавсаргасан зураг:
-                  </h4>
-                  <div className="relative group">
-                    <img
-                      src={selectedItem.imageUrl}
-                      alt="Attachment"
-                      className="w-full h-auto rounded-[2.5rem] border-4 border-white shadow-2xl object-contain bg-slate-100 cursor-zoom-in"
-                      onClick={() =>
-                        window.open(selectedItem.imageUrl, "_blank")
-                      }
-                    />
-                    <div className="absolute bottom-4 right-4 bg-black/50 text-white text-[8px] px-3 py-1.5 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity uppercase font-black tracking-widest">
-                      Томоор харах 🔍
-                    </div>
-                  </div>
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                    Хавсаргасан файл:
+                  </p>
+                  <img
+                    src={selectedItem.imageUrl}
+                    className="w-full rounded-[2rem] border-8 border-white shadow-xl object-contain bg-slate-100 max-h-[300px]"
+                    alt="Evidence"
+                  />
                 </div>
               )}
 
-              <div className="space-y-3">
-                <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                  Дэлгэрэнгүй тайлбар:
-                </h4>
-                <div className="p-6 bg-indigo-50/30 rounded-[2rem] font-bold italic text-slate-700 text-[12px] border border-indigo-50 leading-relaxed shadow-inner">
-                  {selectedItem.description || "Тайлбар бичээгүй байна."}
-                </div>
-              </div>
-
+              {/* Шийдвэрлэх хэсэг */}
               <div className="pt-6 border-t border-slate-100">
                 {selectedItem.status === "Шийдвэрлэсэн" ? (
-                  <div className="p-6 bg-green-50 rounded-[2rem] border border-green-100">
-                    <p className="text-[9px] font-black uppercase text-green-600 mb-2 tracking-widest italic">
-                      Илгээсэн хариу зөвлөгөө:
+                  <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-[2rem]">
+                    <p className="text-[10px] font-black uppercase text-emerald-600 mb-2 tracking-widest">
+                      Илгээсэн хариу:
                     </p>
-                    <p className="font-bold italic text-green-900 text-[12px] leading-relaxed">
+                    <p className="font-black text-emerald-900 text-[14px] leading-relaxed">
                       {selectedItem.adminReply}
                     </p>
                   </div>
@@ -471,14 +384,19 @@ export default function Manager() {
                     <textarea
                       value={reply}
                       onChange={(e) => setReply(e.target.value)}
-                      placeholder="Энд хариу зөвлөгөө эсвэл авсан арга хэмжээг бичнэ үү..."
-                      className="w-full h-32 p-6 bg-slate-50 rounded-[2rem] outline-none font-bold text-[12px] resize-none border-2 border-transparent focus:border-indigo-100 shadow-inner"
+                      className="w-full h-32 p-5 bg-slate-50 rounded-[2rem] outline-none border-2 border-transparent focus:border-indigo-400 focus:bg-white transition-all font-bold text-[13px] placeholder:text-slate-300 shadow-inner"
+                      placeholder="Хариуг энд бичнэ үү..."
                     />
                     <button
-                      onClick={() => handleResolve(selectedItem.customId)}
-                      className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[11px] shadow-xl hover:bg-indigo-700 active:scale-95 transition-all"
+                      onClick={handleResolve}
+                      disabled={submitting || !reply.trim() || submitSuccess}
+                      className={`w-full py-5 rounded-[2rem] font-black uppercase text-[12px] tracking-[0.3em] shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-3 ${submitSuccess ? "bg-emerald-500 text-white" : "bg-slate-900 text-white hover:bg-indigo-600"}`}
                     >
-                      Шийдвэрлэх & Хариу илгээх
+                      {submitting
+                        ? "Илгээж байна..."
+                        : submitSuccess
+                          ? "✓ АМЖИЛТТАЙ"
+                          : "ШИЙДВЭРЛЭХ"}
                     </button>
                   </div>
                 )}
@@ -487,6 +405,34 @@ export default function Manager() {
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+        @keyframes shake {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          25% {
+            transform: translateX(-4px);
+          }
+          75% {
+            transform: translateX(4px);
+          }
+        }
+        .animate-shake {
+          animation: shake 0.2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
