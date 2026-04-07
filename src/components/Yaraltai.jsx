@@ -8,7 +8,6 @@ export default function Yaraltai() {
   const [submittedId, setSubmittedId] = useState("");
   const [isCopied, setIsCopied] = useState(false);
 
-  // Файл сонгох
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -17,7 +16,7 @@ export default function Yaraltai() {
     }
   };
 
-  // Зургийг жижигсгэж боловсруулах
+  // Зургийг жижигсгэх (Таны өөрийн функц - маш сайн!)
   const processImage = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -41,7 +40,6 @@ export default function Yaraltai() {
     });
   };
 
-  // Хуулах үйлдэл
   const handleCopy = (text) => {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
@@ -50,38 +48,39 @@ export default function Yaraltai() {
     });
   };
 
-  // SOS илгээх
   const handleSOS = async (e) => {
     e.preventDefault();
-    if (!description.trim()) return; // Validation text-ээр гаргаж болно
+    if (!description.trim()) {
+      alert("Тайлбар хэсгийг бөглөнө үү.");
+      return;
+    }
 
     setLoading(true);
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const finalId = `SOS-${dateStr}-${randomPart}`;
-
     try {
       let imgData = "";
       if (file) imgData = await processImage(file);
 
+      // Backend рүү явуулах дата
       const res = await fetch("/api/huselt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customId: finalId,
+          answers: { төрөл: "🚨 ЯАРАЛТАЙ SOS" }, // Backend answers хүлээж авдаг тул
           description: description,
           imageUrl: imgData,
-          isUrgent: true,
-          status: "Хүлээгдэж буй",
-          createdAt: new Date(),
+          isUrgent: true, // Энэ утгаар Backend "sos_requests" коллекци руу хийнэ
         }),
       });
 
-      if (res.ok) {
-        setSubmittedId(finalId);
+      const data = await res.json();
+      if (data.success) {
+        setSubmittedId(data.customId); // Backend-ээс ирсэн албан ёсны ID-г ашиглана
+      } else {
+        alert("Алдаа гарлаа: " + data.error);
       }
     } catch (error) {
       console.error("Error:", error);
+      alert("Сервертэй холбогдоход алдаа гарлаа.");
     } finally {
       setLoading(false);
     }
@@ -89,54 +88,45 @@ export default function Yaraltai() {
 
   if (submittedId) {
     return (
-      <div className="max-w-md mx-auto p-8 bg-white rounded-[3rem] shadow-2xl text-center border-2 border-slate-50 mt-10 animate-in zoom-in duration-300">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
-          🚨
-        </div>
-        <h2 className="text-xl font-black mb-2 text-slate-800 uppercase italic tracking-tighter">
-          Хүлээн авлаа!
-        </h2>
-        <p className="text-slate-400 mb-4 font-bold text-[9px] uppercase tracking-widest">
-          Доорх код дээр дарж хуулж авна уу:
-        </p>
+      <div className="min-h-[80vh] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white p-10 rounded-[3rem] shadow-2xl text-center border-2 border-slate-50 animate-in zoom-in duration-300">
+          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 animate-pulse">
+            🚨
+          </div>
+          <h2 className="text-2xl font-black mb-2 text-slate-800 uppercase italic tracking-tighter">
+            ДОХИО ХҮЛЭЭН АВЛАА!
+          </h2>
+          <p className="text-slate-400 mb-8 font-bold text-[10px] uppercase tracking-widest leading-relaxed">
+            Таны мэдээлэл нууцлагдсан. <br /> Доорх код дээр дарж хуулж авна уу:
+          </p>
 
-        {/* --- КОДЫН ХЭСЭГ: Ногоон болох эффект --- */}
-        <div
-          onClick={() => handleCopy(submittedId)}
-          className={`p-6 rounded-[2rem] border-2 border-dashed transition-all duration-300 cursor-pointer active:scale-95 flex flex-col items-center justify-center gap-2 ${
-            isCopied
-              ? "bg-green-50 border-green-500 shadow-lg shadow-green-100"
-              : "bg-red-50 border-red-200 hover:bg-red-100/50"
-          }`}
-        >
-          <code
-            className={`text-2xl font-black tracking-widest transition-colors duration-300 ${
-              isCopied ? "text-green-600" : "text-red-600"
+          <div
+            onClick={() => handleCopy(submittedId)}
+            className={`p-8 rounded-[2rem] border-2 border-dashed transition-all duration-300 cursor-pointer active:scale-95 flex flex-col items-center justify-center gap-2 ${
+              isCopied
+                ? "bg-green-50 border-green-500 shadow-xl shadow-green-100"
+                : "bg-red-50 border-red-200 hover:bg-red-100/50 hover:border-red-400"
             }`}
           >
-            {isCopied ? "ХУУЛАГДЛАА" : submittedId}
-          </code>
+            <code
+              className={`text-2xl font-black tracking-widest transition-colors duration-300 ${
+                isCopied ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {isCopied ? "ХУУЛАГДЛАА ✅" : submittedId}
+            </code>
+            <span
+              className={`text-[9px] font-black uppercase tracking-widest ${isCopied ? "text-green-400" : "text-red-300"}`}
+            >
+              {isCopied ? "Амжилттай хадгалагдлаа" : "ДАРЖ ХУУЛЖ АВАХ"}
+            </span>
+          </div>
 
-          <span
-            className={`text-[8px] font-black uppercase tracking-tighter transition-colors ${
-              isCopied ? "text-green-400" : "text-red-300"
-            }`}
-          >
-            {isCopied ? "Амжилттай хадгалагдлаа ✅" : "Дарж хуулж авах"}
-          </span>
-        </div>
-
-        <div className="mt-8 space-y-3">
           <button
-            onClick={() => {
-              setSubmittedId("");
-              setDescription("");
-              setFile(null);
-              setPreview(null);
-            }}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
+            onClick={() => (window.location.href = "/")}
+            className="w-full mt-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-lg shadow-slate-200"
           >
-            ХААХ
+            НҮҮР ХУУДАС РУУ БУЦАХ
           </button>
         </div>
       </div>
@@ -144,63 +134,78 @@ export default function Yaraltai() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-[2.5rem] shadow-2xl border border-red-50 mt-10">
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-black text-red-600 uppercase tracking-tighter italic leading-none">
-          🚨 Яаралтай тусламж
-        </h2>
-        <p className="text-[9px] text-gray-300 font-black mt-2 uppercase tracking-widest">
-          Мэдээлэл нууц байна
-        </p>
-      </div>
-
-      <form onSubmit={handleSOS} className="space-y-4">
-        <textarea
-          className="w-full h-44 p-5 bg-gray-50 border-2 border-transparent focus:border-red-500 rounded-[1.5rem] outline-none transition-all font-bold text-xs text-black resize-none"
-          placeholder="Тусламж хэрэгтэй зүйлээ энд бичнэ үү..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <div className="bg-red-50/30 p-5 rounded-[1.5rem] border-2 border-dashed border-red-50">
-          <p className="text-[8px] font-black text-red-300 uppercase mb-3 ml-1 tracking-widest">
-            Зураг хавсаргах (заавал биш)
+    <div className="min-h-screen bg-[#FDFDFF] py-12 px-4">
+      <div className="max-w-md mx-auto p-8 bg-white rounded-[2.5rem] shadow-2xl border border-red-50">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-4 animate-bounce">
+            🆘
+          </div>
+          <h2 className="text-2xl font-black text-red-600 uppercase tracking-tighter italic leading-none">
+            Яаралтай тусламж
+          </h2>
+          <p className="text-[10px] text-gray-400 font-bold mt-3 uppercase tracking-[0.2em] opacity-60">
+            Мэдээллийн аюулгүй байдал 100%
           </p>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="w-full text-[9px] text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-red-600 file:text-white file:font-black cursor-pointer"
-          />
-          {preview && (
-            <div className="mt-4 relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setFile(null);
-                  setPreview(null);
-                }}
-                className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px]"
-              >
-                ✕
-              </button>
-            </div>
-          )}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-100 hover:bg-red-700 transition-all active:scale-95 disabled:grayscale"
-        >
-          {loading ? "ИЛГЭЭЖ БАЙНА..." : "🚀 ДОХИО ИЛГЭЭХ"}
-        </button>
-      </form>
+        <form onSubmit={handleSOS} className="space-y-5">
+          <div className="relative">
+            <textarea
+              className="w-full h-48 p-6 bg-slate-50 border-2 border-transparent focus:border-red-500 rounded-[2rem] outline-none transition-all font-bold text-sm text-black resize-none placeholder:text-slate-300 shadow-inner"
+              placeholder="Яг одоо юу тохиолдоод байна вэ? Бидэнд итгэж бүхнээ бичээрэй..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="bg-red-50/40 p-6 rounded-[2rem] border-2 border-dashed border-red-100 group hover:border-red-300 transition-colors">
+            <p className="text-[9px] font-black text-red-400 uppercase mb-4 ml-1 tracking-widest flex items-center gap-2">
+              <span>📸</span> Зураг хавсаргах (заавал биш)
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="w-full text-[10px] text-gray-400 file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:bg-red-600 file:text-white file:font-black file:uppercase file:text-[9px] cursor-pointer"
+            />
+            {preview && (
+              <div className="mt-5 relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-lg animate-in fade-in zoom-in">
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFile(null);
+                    setPreview(null);
+                  }}
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shadow-md hover:scale-110 transition-transform"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-6 bg-red-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl shadow-red-200 hover:bg-red-700 hover:-translate-y-1 transition-all active:scale-95 disabled:grayscale disabled:translate-y-0"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-2 h-2 bg-white rounded-full animate-bounce"></span>
+                <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-100"></span>
+                ИЛГЭЭЖ БАЙНА...
+              </span>
+            ) : (
+              "🚀 ДОХИО ИЛГЭЭХ"
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

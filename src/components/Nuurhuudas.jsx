@@ -14,26 +14,39 @@ export default function Nuurhuudas() {
     "Өөрийгөө буруутгах мэдрэмж",
   ];
 
+  // Ухаалаг хайлтын функц
   const handleSearch = async () => {
-    const cleanId = searchId.trim().toUpperCase(); // Оролтыг цэвэрлэх
+    let cleanId = searchId.trim().toUpperCase();
     if (!cleanId) return;
 
     setLoading(true);
     setError("");
-    setSearchResult(null); // Шинэ хайлт эхлэхэд өмнөх үр дүнг арилгах
+    setSearchResult(null);
 
     try {
-      // API-аас датаг дуудах
-      const res = await fetch(`/api/huselt?id=${cleanId}`);
-      const data = await res.json();
+      // 1. Эхний оролдлого: encodeURIComponent ашиглан аюулгүй хайх
+      // Энэ нь 2026-ABCD доторх "-" тэмдэгтийг зөв дамжуулна
+      const url = `/api/huselt?id=${encodeURIComponent(cleanId)}`;
+      let res = await fetch(url);
+      let data = await res.json();
+
+      // 2. Хоёр дахь оролдлого: Хэрэв олдохгүй бол "SOS-" залгаж хайж үзэх
+      if (!data.success && !cleanId.startsWith("SOS-")) {
+        const sosId = `SOS-${cleanId}`;
+        const resSos = await fetch(
+          `/api/huselt?id=${encodeURIComponent(sosId)}`,
+        );
+        const dataSos = await resSos.json();
+
+        if (dataSos.success) {
+          data = dataSos;
+        }
+      }
 
       if (data.success && data.data) {
         setSearchResult(data.data);
       } else {
-        // Хэрэв ID олдсон ч хариу байхгүй эсвэл ID олдохгүй бол
-        setError(
-          data.error || "Мэдээлэл олдсонгүй. ID-гаа дахин шалгана уу. ⏳",
-        );
+        setError("Мэдээлэл олдсонгүй. ID кодыг дахин шалгана уу. ⏳");
       }
     } catch (e) {
       setError("Сервертэй холбогдоход алдаа гарлаа. Дахин оролдоно уу.");
@@ -44,13 +57,15 @@ export default function Nuurhuudas() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans selection:bg-indigo-100 overflow-x-hidden">
-      {/* --- 1. URGENT HEADER --- */}
+      {/* --- 1. ЯАРАЛТАЙ HEADER --- */}
       <Link href="/yar" className="block relative z-50 group">
-        <div className="bg-red-600 hover:bg-red-700 py-3 px-4 flex items-center justify-center gap-3 transition-colors">
+        <div className="bg-red-600 hover:bg-red-700 py-3 px-4 flex items-center justify-center gap-3 transition-colors shadow-lg">
           <span className="text-lg animate-bounce">🚨</span>
           <span className="text-white font-black text-[10px] uppercase tracking-widest italic">
             Яаралтай тусламж хэрэгтэй юу?{" "}
-            <span className="underline ml-2">Энд дар →</span>
+            <span className="underline ml-2 font-bold uppercase tracking-tighter animate-pulse">
+              Энд дар →
+            </span>
           </span>
         </div>
       </Link>
@@ -97,7 +112,7 @@ export default function Nuurhuudas() {
           </div>
         </div>
 
-        {/* --- Search Section --- */}
+        {/* --- Хариу шалгах Search Card --- */}
         <div className="w-full max-w-sm mx-auto">
           <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 border border-slate-50 relative overflow-hidden">
             <div className="relative z-10 space-y-4">
@@ -106,7 +121,7 @@ export default function Nuurhuudas() {
                   Хариу шалгах
                 </h2>
                 <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-1">
-                  Өөрийн ID кодыг оруулна уу
+                  ID кодоо оруулан багшийн хариуг харна уу
                 </p>
               </div>
 
@@ -123,7 +138,7 @@ export default function Nuurhuudas() {
                   disabled={loading}
                   className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-md active:scale-95"
                 >
-                  {loading ? "Уншиж байна..." : "ШАЛГАХ"}
+                  {loading ? "Хайж байна..." : "ШАЛГАХ"}
                 </button>
               </div>
 
@@ -148,29 +163,31 @@ export default function Nuurhuudas() {
                           : "bg-orange-100 text-orange-600"
                       }`}
                     >
-                      {searchResult.status || "Хүлээгдэж буй"}
+                      {searchResult.status || "Шинэ"}
                     </span>
                   </div>
 
                   <div className="space-y-3">
-                    {/* Хэрэглэгчийн тайлбар */}
-                    <div className="p-3 bg-slate-50 rounded-xl">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                       <p className="text-[7px] font-black text-slate-300 uppercase mb-1">
                         Таны тайлбар:
                       </p>
-                      <p className="text-[9px] font-bold text-slate-600 italic line-clamp-2">
-                        "{searchResult.description}"
+                      <p className="text-[9px] font-bold text-slate-600 italic line-clamp-2 leading-relaxed">
+                        "{searchResult.description || "Тайлбар байхгүй"}"
                       </p>
                     </div>
 
-                    {/* Багшийн хариу */}
-                    <div className="p-4 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-100">
-                      <p className="text-[8px] font-black text-indigo-200 uppercase mb-1 italic tracking-widest">
-                        Багшийн зөвлөгөө:
+                    <div
+                      className={`p-4 rounded-2xl shadow-lg ${searchResult.isUrgent ? "bg-red-600 shadow-red-100" : "bg-indigo-600 shadow-indigo-100"}`}
+                    >
+                      <p className="text-[8px] font-black text-white/70 uppercase mb-1 italic tracking-widest">
+                        {searchResult.isUrgent
+                          ? "‼️ БАГШИЙН ЯАРАЛТАЙ ЗӨВЛӨГӨӨ:"
+                          : "БАГШИЙН ЗӨВЛӨГӨӨ:"}
                       </p>
                       <p className="text-[11px] font-bold text-white leading-relaxed italic">
                         {searchResult.adminReply ||
-                          "Багш одоогоор хариу бичиж байна. Түр хүлээнэ үү... ✍️"}
+                          "Багш одоогоор анкеттай танилцаж байна. Түр хүлээнэ үү... ✍️"}
                       </p>
                     </div>
                   </div>
@@ -181,17 +198,12 @@ export default function Nuurhuudas() {
         </div>
       </main>
 
-      {/* --- Бусад хэсгүүд (Types, Symptoms, Footer хэвээрээ) --- */}
-      {/* ... (Түрүүн байсан коднууд) ... */}
-
+      {/* --- Бусад хэсэг (Дээрэлхэлт, Шинж тэмдэг) --- */}
       <section className="bg-white py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-xl font-black text-slate-900 uppercase italic tracking-tighter">
-              Дээрэлхэлт гэж юу вэ?
-            </h2>
-            <div className="w-12 h-1 bg-indigo-600 mx-auto mt-2 rounded-full"></div>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-xl font-black text-slate-900 uppercase italic tracking-tighter mb-8">
+            Дээрэлхэлт гэж юу вэ?
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
               {
@@ -212,13 +224,13 @@ export default function Nuurhuudas() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-50 hover:bg-white hover:shadow-lg transition-all flex flex-col items-center text-center"
+                className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-50 hover:bg-white hover:shadow-lg transition-all"
               >
                 <div className="text-3xl mb-3">{item.icon}</div>
-                <h3 className="text-md font-black uppercase italic tracking-tighter text-slate-800 mb-1">
+                <h3 className="text-md font-black uppercase italic text-slate-800 mb-1">
                   {item.title}
                 </h3>
-                <p className="text-slate-400 text-[10px] font-bold leading-tight uppercase tracking-tight max-w-[180px]">
+                <p className="text-slate-400 text-[10px] font-bold leading-tight uppercase tracking-tight">
                   {item.desc}
                 </p>
               </div>
@@ -228,14 +240,14 @@ export default function Nuurhuudas() {
       </section>
 
       <section className="max-w-5xl mx-auto px-4 py-12">
-        <h2 className="text-lg font-black text-center mb-6 uppercase italic tracking-tighter text-slate-800 underline decoration-indigo-100 decoration-4 underline-offset-4">
+        <h2 className="text-lg font-black text-center mb-6 uppercase italic text-slate-800 underline decoration-indigo-100 decoration-4 underline-offset-4">
           Шинж тэмдгүүд
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {symptoms.map((s, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm"
+              className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm transition-transform hover:scale-[1.02]"
             >
               <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
               <span className="font-black text-slate-700 text-[9px] uppercase tracking-tight">

@@ -12,35 +12,37 @@ export default async function handler(req, res) {
         ? client.db("test")
         : client.connection.db;
 
-    // --- GET: БҮХ ДАТА ЭСВЭЛ НЭГ ID-ГААР ШАЛГАХ ---
+    // --- GET: ХАЙЛТ ХИЙХ ЭСВЭЛ БҮХ ДАТАГ АВАХ ---
     if (req.method === "GET") {
       const { id } = req.query;
 
-      // Хэрэв URL дээр ?id=... гэж ирвэл (Хэрэглэгч хариу шалгах үед)
+      // Хэрэв URL дээр ?id=... гэж ирсэн бол (Хэрэглэгч хариу шалгах үед)
       if (id) {
-        const [res1, res2] = await Promise.all([
-          db
-            .collection("answers")
-            .findOne({ customId: id.toUpperCase().trim() }),
-          db
-            .collection("sos_requests")
-            .findOne({ customId: id.toUpperCase().trim() }),
-        ]);
+        const cleanId = id.toUpperCase().trim();
 
-        const foundData = res1 || res2;
+        // 1. Эхлээд энгийн анкет дотроос хайна
+        let foundData = await db
+          .collection("answers")
+          .findOne({ customId: cleanId });
+
+        // 2. Хэрэв олдохгүй бол яаралтай тусламж дотроос хайна
+        if (!foundData) {
+          foundData = await db
+            .collection("sos_requests")
+            .findOne({ customId: cleanId });
+        }
+
         if (foundData) {
           return res.status(200).json({ success: true, data: foundData });
         } else {
-          return res
-            .status(404)
-            .json({
-              success: false,
-              error: "Мэдээлэл олдсонгүй. ID-гаа шалгана уу.",
-            });
+          return res.status(404).json({
+            success: false,
+            error: "Код олдсонгүй. Та кодоо зөв оруулсан уу?",
+          });
         }
       }
 
-      // Админ панельд зориулж бүх датаг татах
+      // Админ панельд зориулж бүх датаг нэгтгэж харуулах
       const [normal, sos] = await Promise.all([
         db.collection("answers").find({}).toArray(),
         db.collection("sos_requests").find({}).toArray(),
@@ -52,11 +54,12 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data: allData });
     }
 
-    // --- POST: ШИНЭ АНКЕТ ИЛГЭЭХ ---
+    // --- POST: ШИНЭ ХҮСЭЛТ ХАДГАЛАХ ---
     if (req.method === "POST") {
       const { answers, description, imageUrl, isUrgent } = req.body;
       const isSOS =
         isUrgent || Object.values(answers || {}).some((v) => v === "🚨 SOS");
+
       const now = new Date();
       const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
       const randomStr = Math.random()
@@ -83,7 +86,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, customId });
     }
 
-    // --- PATCH: АДМИН ХАРИУ ИЛГЭЭХ ---
+    // --- PATCH: БАГШИЙН ХАРИУ ШИНЭЧЛЭХ ---
     if (req.method === "PATCH") {
       const { id, status, adminReply } = req.body;
       const updateData = {
@@ -100,7 +103,9 @@ export default async function handler(req, res) {
       if (r1.modifiedCount > 0 || r2.modifiedCount > 0) {
         return res.status(200).json({ success: true });
       }
-      return res.status(404).json({ success: false, error: "Дата олдсонгүй" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Шинэчлэх дата олдсонгүй" });
     }
 
     // --- DELETE: УСТГАХ ---
