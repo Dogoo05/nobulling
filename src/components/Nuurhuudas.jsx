@@ -72,12 +72,6 @@ export default function Nuurhuudas() {
             SafeSpace
           </span>
         </div>
-        <Link
-          href="/asuult"
-          className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all"
-        >
-          Анкет
-        </Link>
       </nav>
       <main className="max-w-7xl mx-auto px-4 pt-6 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div className="space-y-4 text-center lg:text-left">

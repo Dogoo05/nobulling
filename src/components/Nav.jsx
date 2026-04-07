@@ -32,10 +32,10 @@ export default function Nav() {
               Нүүр хуудас
             </Link>
             <Link
-              href="/asuult"
+              href="/admn"
               className="hover:text-indigo-600 transition-colors"
             >
-              Тусламж
+              Жагсаалт
             </Link>
           </div>
 
@@ -104,11 +104,11 @@ export default function Nav() {
             Тусламж
           </Link>
           <Link
-            href="/manager"
-            className="bg-indigo-50 text-indigo-600 px-4 py-3 rounded-xl"
+            href="/admn"
+            className="hover:text-indigo-600"
             onClick={() => setIsOpen(false)}
           >
-            Админ удирдлага
+            Жагсаалт
           </Link>
         </div>
       </div>

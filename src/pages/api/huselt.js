@@ -7,111 +7,85 @@ export const config = {
 export default async function handler(req, res) {
   try {
     const client = await clientPromise;
-    const db =
-      typeof client.db === "function"
-        ? client.db("test")
-        : client.connection.db;
+    const db = client.db("test"); // Хэрэв чиний бааз өөр нэртэй бол энд сольж бичээрэй
 
+    // --- GET: Мэдээлэл татах ---
     if (req.method === "GET") {
       const { id } = req.query;
-
-
-      if (id) {
+      if (id && id !== "undefined") {
         const cleanId = id.toUpperCase().trim();
-
-
         let foundData = await db
           .collection("answers")
           .findOne({ customId: cleanId });
-
-
-        if (!foundData) {
+        if (!foundData)
           foundData = await db
             .collection("sos_requests")
             .findOne({ customId: cleanId });
-        }
-
-        if (foundData) {
+        if (foundData)
           return res.status(200).json({ success: true, data: foundData });
-        } else {
-          return res.status(404).json({
-            success: false,
-            error: "Код олдсонгүй. Та кодоо зөв оруулсан уу?",
-          });
-        }
+        return res
+          .status(404)
+          .json({ success: false, error: "Код олдсонгүй." });
       }
-
-
       const [normal, sos] = await Promise.all([
         db.collection("answers").find({}).toArray(),
         db.collection("sos_requests").find({}).toArray(),
       ]);
-
       const allData = [...normal, ...sos].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       );
       return res.status(200).json({ success: true, data: allData });
     }
 
+    // --- POST: Шинэ хүсэлт хадгалах ЭСВЭЛ Хариу бичих ---
     if (req.method === "POST") {
-      const { answers, description, imageUrl, isUrgent } = req.body;
-      const isSOS =
-        isUrgent || Object.values(answers || {}).some((v) => v === "🚨 SOS");
+      const body = req.body;
 
-      const now = new Date();
-      const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
-      const randomStr = Math.random()
-        .toString(36)
-        .substring(2, 6)
-        .toUpperCase();
-      const customId = isSOS
-        ? `SOS-${dateStr}-${randomStr}`
-        : `${dateStr}-${randomStr}`;
+      // 1. АДМИН ХАРИУ БИЧИЖ БАЙГАА ТОХИОЛДОЛ (Body дотор customId байгаа бол)
+      if (body.id || body.customId) {
+        const targetId = body.id || body.customId;
+        const updateDoc = {
+          $set: {
+            status: body.status || "Шийдвэрлэсэн",
+            adminReply: body.adminReply || "",
+            updatedAt: new Date(),
+          },
+        };
+        const r1 = await db
+          .collection("answers")
+          .updateOne({ customId: targetId }, updateDoc);
+        const r2 = await db
+          .collection("sos_requests")
+          .updateOne({ customId: targetId }, updateDoc);
 
-      const newDoc = {
-        customId,
-        answers: answers || {},
-        description: description || "",
-        imageUrl: imageUrl || "",
-        status: "Шинэ",
-        adminReply: "",
-        isUrgent: isSOS,
-        createdAt: now,
-      };
-
-      const colName = isSOS ? "sos_requests" : "answers";
-      await db.collection(colName).insertOne(newDoc);
-      return res.status(200).json({ success: true, customId });
-    }
-
-    if (req.method === "PATCH") {
-      const { id, status, adminReply } = req.body;
-      const updateData = {
-        $set: { status, adminReply, updatedAt: new Date() },
-      };
-
-      const r1 = await db
-        .collection("answers")
-        .updateOne({ customId: id }, updateData);
-      const r2 = await db
-        .collection("sos_requests")
-        .updateOne({ customId: id }, updateData);
-
-      if (r1.modifiedCount > 0 || r2.modifiedCount > 0) {
-        return res.status(200).json({ success: true });
+        if (r1.matchedCount > 0 || r2.matchedCount > 0) {
+          return res.status(200).json({ success: true });
+        }
       }
-      return res
-        .status(404)
-        .json({ success: false, error: "Шинэчлэх дата олдсонгүй" });
+
+      // 2. ХЭРЭГЛЭГЧ ШИНЭ ХҮСЭЛТ ИЛГЭЭЖ БАЙГАА ТОХИОЛДОЛ
+      const finalDoc = {
+        ...body,
+        status: body.status || "Шинэ",
+        createdAt: new Date(),
+      };
+
+      let result;
+      // SOS (🚨) агуулсан бол sos_requests руу, үгүй бол answers руу
+      if (body.answers && body.answers[3]?.includes("🚨")) {
+        result = await db.collection("sos_requests").insertOne(finalDoc);
+      } else {
+        result = await db.collection("answers").insertOne(finalDoc);
+      }
+
+      return res.status(201).json({ success: true, data: result });
     }
 
-    if (req.method === "DELETE") {
-      const { id } = req.query;
-      await db.collection("answers").deleteOne({ customId: id });
-      await db.collection("sos_requests").deleteOne({ customId: id });
-      return res.status(200).json({ success: true });
-    }
+    return res
+      .status(405)
+      .json({ success: false, error: "Method not allowed" });
   } catch (e) {
+    console.error("MONGODB ERROR:", e);
     return res.status(500).json({ success: false, error: e.message });
   }
 }
