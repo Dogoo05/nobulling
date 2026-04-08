@@ -15,7 +15,7 @@ export default function Nav() {
   const menuItems = [
     { name: "Нүүр хуудас", href: "/", icon: "🏠" },
     { name: "Жагсаалт", href: "/admn", icon: "📋" },
-    { name: "Үр дүн", href: "/urdun", icon: "📊" },
+
     { name: "Зөвлөгөө", href: "/zuv", icon: "💡" },
   ];
 
@@ -36,7 +36,7 @@ export default function Nav() {
             </div>
             <div className="flex flex-col">
               <span className="font-black text-sm md:text-xl text-indigo-900 leading-none uppercase tracking-tight">
-                Anti-Bully
+                No-Bullying
               </span>
               <span className="text-[7px] md:text-[10px] text-indigo-400 font-bold uppercase tracking-[0.1em]">
                 Platform
