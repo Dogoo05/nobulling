@@ -110,6 +110,12 @@ export default function Nav() {
           >
             Жагсаалт
           </Link>
+          <Link
+            href="/manager"
+            className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all"
+          >
+            Админ хэсэг
+          </Link>
         </div>
       </div>
     </nav>

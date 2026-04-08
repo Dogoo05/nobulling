@@ -211,12 +211,6 @@ export default function Manager() {
                 </button>
               ))}
             </div>
-            <button
-              onClick={fetchData}
-              className="ml-2 text-slate-300 hover:text-indigo-500 transition-colors"
-            >
-              🔄
-            </button>
           </div>
         </header>
 

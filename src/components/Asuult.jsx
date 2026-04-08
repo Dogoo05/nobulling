@@ -4,13 +4,7 @@ const questions = [
   {
     id: 1,
     question: "1. Танд тохиолдож буй дээрэлхэлт ямар хэлбэрээр илэрч байна вэ?",
-    options: [
-      "🗣️ Үг хэлээр",
-      "👊 Бие махбодиор",
-      "📱 Цахимаар",
-      "🔄 Бүх хэлбэрүүд",
-      "🚨 SOS",
-    ],
+    options: ["🗣️ Үг хэлээр", "👊 Бие махбодиор", "📱 Цахимаар", "🔄 Бүх хэлбэрүүд", "🚨 SOS"],
   },
   {
     id: 2,
@@ -68,11 +62,6 @@ export default function Asuult() {
   const [submittedId, setSubmittedId] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Санамсаргүй ID үүсгэгч функц
-  const generateId = () => {
-    return "SAFE-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
   const handleCopy = () => {
     if (!submittedId) return;
     navigator.clipboard.writeText(submittedId).then(() => {
@@ -89,7 +78,17 @@ export default function Asuult() {
 
     setLoading(true);
     let finalImageUrl = "";
-    const uniqueCode = generateId(); // Кодыг энд үүсгэнэ
+
+    // Огноо суурьтай ID үүсгэх логик
+    const date = new Date();
+    const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+    
+    // SOS байгаа эсэхийг шалгах
+    const hasSOS = Object.values(answers).some((val) => val.includes("🚨 SOS"));
+    
+    // Эцсийн ID-г тодорхойлох
+    const uniqueCode = hasSOS ? `SOS-${dateStr}-${randomStr}` : `${dateStr}-${randomStr}`;
 
     try {
       // 1. Cloudinary-руу зураг хуулах
@@ -100,36 +99,32 @@ export default function Asuult() {
 
         const cloudRes = await fetch(
           "https://api.cloudinary.com/v1_1/dccr94tvw/image/upload",
-          { method: "POST", body: formData },
+          { method: "POST", body: formData }
         );
 
         const cloudData = await cloudRes.json();
         if (cloudRes.ok) finalImageUrl = cloudData.secure_url;
       }
 
-      // 2. SOS байгаа эсэхийг шалгах
-      const hasSOS = Object.values(answers).some((val) =>
-        val.includes("🚨 SOS"),
-      );
-
-      // 3. Backend-рүү илгээх
+      // 2. Backend-рүү илгээх
       const res = await fetch("/api/huselt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customId: uniqueCode, // ЗААВАЛ ИЛГЭЭХ
+          customId: uniqueCode,
           answers,
           description,
           imageUrl: finalImageUrl,
           isUrgent: hasSOS,
+          type: hasSOS ? "SOS" : "NORMAL"
         }),
       });
 
       const result = await res.json();
 
       if (res.ok && result.success) {
-        // Хэрэв backend-ээс customId ирэхгүй бол өөрийн үүсгэсэн кодыг харуулна
-        setSubmittedId(result.data?.customId || uniqueCode);
+        // Backend-ээс ирсэн customId-г харуулна
+        setSubmittedId(result.customId || uniqueCode);
       } else {
         alert("Алдаа: " + (result.error || "Илгээж чадсангүй"));
       }
@@ -143,38 +138,18 @@ export default function Asuult() {
 
   if (submittedId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] p-6 font-sans">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] p-6">
         <div className="max-w-md w-full bg-white p-10 rounded-[3rem] shadow-2xl text-center border border-slate-50 animate-in zoom-in duration-500">
-          <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
-            ✓
-          </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase italic tracking-tighter">
-            Амжилттай!
-          </h2>
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-8">
-            Кодоо хадгалж аваад хариугаа шалгаарай
-          </p>
+          <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">✓</div>
+          <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase italic tracking-tighter">Амжилттай!</h2>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-8">Кодоо хадгалж аваад хариугаа шалгаарай</p>
 
-          <div
-            onClick={handleCopy}
-            className={`p-8 rounded-[2rem] border-2 border-dashed cursor-pointer transition-all active:scale-95 ${copied ? "bg-green-50 border-green-500" : "bg-slate-50 border-slate-200 hover:border-indigo-300"}`}
-          >
-            <code
-              className={`text-2xl font-black tracking-widest block ${copied ? "text-green-600" : "text-indigo-600"}`}
-            >
-              {submittedId}
-            </code>
-            <p className="text-[8px] font-bold text-slate-400 mt-2 uppercase tracking-widest">
-              {copied ? "ХУУЛАГДЛАА ✅" : "Дээр дарж хуулна"}
-            </p>
+          <div onClick={handleCopy} className={`p-8 rounded-[2rem] border-2 border-dashed cursor-pointer transition-all active:scale-95 ${copied ? "bg-green-50 border-green-500" : "bg-slate-50 border-slate-200 hover:border-indigo-300"}`}>
+            <code className={`text-2xl font-black tracking-widest block ${copied ? "text-green-600" : "text-indigo-600"}`}>{submittedId}</code>
+            <p className="text-[8px] font-bold text-slate-400 mt-2 uppercase tracking-widest">{copied ? "ХУУЛАГДЛАА ✅" : "Дээр дарж хуулна"}</p>
           </div>
 
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="w-full mt-8 py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black shadow-lg shadow-slate-200 transition-all active:scale-95"
-          >
-            Нүүр хуудас руу буцах
-          </button>
+          <button onClick={() => (window.location.href = "/")} className="w-full mt-8 py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-200 transition-all active:scale-95">Нүүр хуудас руу буцах</button>
         </div>
       </div>
     );
@@ -184,24 +159,15 @@ export default function Asuult() {
     <div className="min-h-screen bg-[#FDFDFF] py-12 px-4 font-sans text-slate-900">
       <div className="max-w-6xl mx-auto space-y-12">
         <header className="text-center space-y-4">
-          <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-[0.3em]">
-            Safe Space System
-          </div>
-          <h1 className="text-5xl font-black italic uppercase tracking-tighter">
-            Тусламж <span className="text-indigo-600">авах</span>
-          </h1>
+          <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-[0.3em]">Safe Space System</div>
+          <h1 className="text-5xl font-black italic uppercase tracking-tighter">Тусламж <span className="text-indigo-600">авах</span></h1>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {questions.map((q) => (
-            <div
-              key={q.id}
-              className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300"
-            >
+            <div key={q.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
               <h3 className="text-[12px] font-black uppercase tracking-tight text-slate-800 mb-6 flex items-center gap-2">
-                <span className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-500">
-                  {q.id}
-                </span>
+                <span className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-500">{q.id}</span>
                 {q.question.replace(/^\d+\.\s/, "")}
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -236,47 +202,25 @@ export default function Asuult() {
           </div>
           <div className="flex flex-col items-center">
             <label className="cursor-pointer group relative">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
+              <input type="file" accept="image/*" onChange={(e) => {
                   const f = e.target.files[0];
-                  if (f) {
-                    setFile(f);
-                    setPreview(URL.createObjectURL(f));
-                  }
-                }}
-                className="hidden"
-              />
+                  if (f) { setFile(f); setPreview(URL.createObjectURL(f)); }
+                }} className="hidden" />
               {preview ? (
                 <div className="relative">
-                  <img
-                    src={preview}
-                    className="w-32 h-32 object-cover rounded-[2rem] border-4 border-indigo-500 shadow-xl"
-                    alt="Preview"
-                  />
-                  <div className="absolute inset-0 bg-black/40 rounded-[2rem] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white text-[10px] font-black tracking-widest">
-                    СОЛИХ
-                  </div>
+                  <img src={preview} className="w-32 h-32 object-cover rounded-[2rem] border-4 border-indigo-500 shadow-xl" alt="Preview" />
+                  <div className="absolute inset-0 bg-black/40 rounded-[2rem] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white text-[10px] font-black tracking-widest">СОЛИХ</div>
                 </div>
               ) : (
-                <div className="w-32 h-32 bg-slate-800 rounded-[2rem] flex items-center justify-center text-3xl hover:bg-slate-700 transition-all border-2 border-dashed border-slate-600 group-hover:border-indigo-500">
-                  📸
-                </div>
+                <div className="w-32 h-32 bg-slate-800 rounded-[2rem] flex items-center justify-center text-3xl hover:bg-slate-700 transition-all border-2 border-dashed border-slate-600 group-hover:border-indigo-500">📸</div>
               )}
             </label>
-            <p className="text-[8px] text-slate-500 font-black uppercase mt-3 tracking-widest italic opacity-60">
-              Зураг хавсаргах
-            </p>
+            <p className="text-[8px] text-slate-500 font-black uppercase mt-3 tracking-widest italic opacity-60">Зураг хавсаргах</p>
           </div>
         </div>
 
         <div className="max-w-md mx-auto pb-20">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 active:scale-95 transition-all"
-          >
+          <button onClick={handleSubmit} disabled={loading} className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 active:scale-95 transition-all">
             {loading ? "ИЛГЭЭЖ БАЙНА..." : "АНКЕТ ИЛГЭЭХ"}
           </button>
         </div>
