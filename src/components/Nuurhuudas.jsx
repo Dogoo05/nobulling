@@ -54,7 +54,7 @@ export default function Nuurhuudas() {
         if (found) {
           setSearchResult(found);
         } else {
-          setErrorMsg("Уучлаарай, ийм ID кодтой мэдээлэл олдсонгүй.");
+          setErrorMsg();
         }
       } else {
         setErrorMsg("Мэдээлэл татахад алдаа гарлаа.");
