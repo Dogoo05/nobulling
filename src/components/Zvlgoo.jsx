@@ -46,7 +46,6 @@ const protectionTactics = [
 export default function Zvlgoo() {
   return (
     <div className="min-h-screen bg-[#F4F6F8] font-sans text-slate-900 pb-10">
-      {/* Scroll хийхэд дээд талд нь наалдах Navbar */}
       <nav className=" bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-3 flex justify-between items-center shadow-sm">
         <h2 className="font-black italic text-sm tracking-tighter uppercase">
           Safe<span className="text-indigo-600">Guide</span>
@@ -54,7 +53,6 @@ export default function Zvlgoo() {
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 mt-6 space-y-6">
-        {/* Хэсэг 1: Ерөнхий ойлголт */}
         <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-50">
           <h3 className="text-indigo-600 font-black text-[10px] uppercase tracking-[0.3em] mb-2">
             01. Дээрэлхэлт гэж юу вэ?
@@ -82,7 +80,6 @@ export default function Zvlgoo() {
           </div>
         </section>
 
-        {/* Хэсэг 2: Сэтгэл зүйн зөвлөгөө */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-indigo-900 p-7 rounded-[3rem] text-white shadow-xl">
             <h3 className="font-black italic text-lg uppercase tracking-tight mb-4 leading-none">
@@ -122,7 +119,6 @@ export default function Zvlgoo() {
           </div>
         </section>
 
-        {/* Хэсэг 3: Хууль эрх зүйн мэдээлэл */}
         <section className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2.5rem] relative overflow-hidden">
           <div className="absolute top-[-10px] right-[-10px] text-7xl opacity-5 grayscale">
             ⚖️
@@ -146,8 +142,6 @@ export default function Zvlgoo() {
             </p>
           </div>
         </section>
-
-        {/* Хэсэг 4: Эцэг эх, томчуудад зориулсан хэсэг */}
         <section className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
           <h3 className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mb-4">
             Админууд болон Томчуудад
@@ -174,7 +168,6 @@ export default function Zvlgoo() {
           </div>
         </section>
 
-        {/* Сүүл хэсэг */}
         <footer className="text-center py-6 border-t border-slate-200">
           <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.5em] mb-4">
             SafeSpace Mongolia 2026
@@ -196,7 +189,6 @@ export default function Zvlgoo() {
         </footer>
       </div>
 
-      {/* Гоё харагдуулах загвар */}
       <style jsx>{`
         section {
           animation: fadeInUp 0.6s ease-out both;

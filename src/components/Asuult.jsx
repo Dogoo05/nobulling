@@ -24,7 +24,7 @@ const questions = [
   },
   {
     id: 4,
-    question: "4. Давтамж нь ямар vэ?",
+    question: "4.Хэр хугацаанд үргэлжилсэн бэ?",
     options: ["Хэдхэн хоног", "Хэдэн сарын турш", "Нэг жилээс дээш"],
   },
   {
@@ -85,21 +85,17 @@ export default function Asuult() {
     setLoading(true);
     let finalImageUrl = "";
 
-    // Огноо суурьтай ID үүсгэх логик
     const date = new Date();
     const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
     const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    // SOS байгаа эсэхийг шалгах
     const hasSOS = Object.values(answers).some((val) => val.includes("🚨 SOS"));
 
-    // Эцсийн ID-г тодорхойлох
     const uniqueCode = hasSOS
       ? `SOS-${dateStr}-${randomStr}`
       : `${dateStr}-${randomStr}`;
 
     try {
-      // 1. Cloudinary-руу зураг хуулах
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
@@ -114,7 +110,6 @@ export default function Asuult() {
         if (cloudRes.ok) finalImageUrl = cloudData.secure_url;
       }
 
-      // 2. Backend-рүү илгээх
       const res = await fetch("/api/huselt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +126,6 @@ export default function Asuult() {
       const result = await res.json();
 
       if (res.ok && result.success) {
-        // Backend-ээс ирсэн customId-г харуулна
         setSubmittedId(result.customId || uniqueCode);
       } else {
         alert("Алдаа: " + (result.error || "Илгээж чадсангүй"));

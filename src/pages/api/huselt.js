@@ -9,10 +9,9 @@ export default async function handler(req, res) {
   const client = await clientPromise;
   const db = client.db("test");
 
-  // --- 1. ШИНЭЧЛЭХ (PUT) ---
   if (req.method === "PUT") {
     try {
-      const { id } = req.query; // URL-аас ?id=... гэж ирнэ
+      const { id } = req.query;
       const { status, adminReply } = req.body;
 
       if (!id)
@@ -28,7 +27,6 @@ export default async function handler(req, res) {
         },
       };
 
-      // ID шалгах (ObjectId мөн эсэх)
       let query = {};
       try {
         query = { _id: id.length === 24 ? new ObjectId(id) : id };
@@ -36,7 +34,6 @@ export default async function handler(req, res) {
         query = { customId: id };
       }
 
-      // Аль ч collection-д байсан шинэчилнэ
       let result = await db.collection("answers").updateOne(query, updateDoc);
       if (result.matchedCount === 0) {
         result = await db
@@ -44,7 +41,6 @@ export default async function handler(req, res) {
           .updateOne(query, updateDoc);
       }
 
-      // Хэрэв олдоогүй бол customId-гаар нь дахиж нэг оролдоно
       if (result.matchedCount === 0) {
         result = await db
           .collection("answers")
@@ -64,7 +60,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- 2. ТАТАХ (GET) ---
   if (req.method === "GET") {
     try {
       const [normal, sos] = await Promise.all([
@@ -80,7 +75,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- 3. ШИНЭЭР ҮҮСГЭХ (POST) ---
   if (req.method === "POST") {
     try {
       const body = req.body;

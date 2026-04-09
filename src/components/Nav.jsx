@@ -21,10 +21,8 @@ export default function Nav() {
 
   return (
     <>
-      {/* NAVBAR */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-indigo-100 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-2 flex justify-between items-center">
-          {/* LOGO (Desktop & Mobile Main) */}
           <Link href="/" className="flex items-center gap-2 group py-1">
             <div className="relative">
               <img
@@ -44,7 +42,6 @@ export default function Nav() {
             </div>
           </Link>
 
-          {/* DESKTOP MENU */}
           <div className="hidden md:flex items-center gap-8 text-[15px] font-bold text-slate-600">
             {menuItems.map((item, i) => (
               <Link
@@ -63,7 +60,6 @@ export default function Nav() {
             </Link>
           </div>
 
-          {/* HAMBURGER BUTTON */}
           <div className="md:hidden">
             <button
               className="p-2 rounded-xl text-slate-600 hover:bg-indigo-50 active:scale-90 transition-all focus:outline-none"
@@ -87,7 +83,6 @@ export default function Nav() {
         </div>
       </nav>
 
-      {/* MOBILE SIDEBAR */}
       <div
         className={`fixed inset-0 z-[100] transition-all duration-500 ${isOpen ? "visible" : "invisible"}`}
       >
@@ -100,7 +95,6 @@ export default function Nav() {
           className={`absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) transform ${isOpen ? "translate-x-0" : "translate-x-full"}`}
         >
           <div className="p-5 flex flex-col h-full relative">
-            {/* SIDEBAR TOP: Logo & Name */}
             <div className="flex items-start justify-between mb-8 pb-6 border-b border-slate-50">
               <div className="flex items-center gap-3">
                 <img
@@ -137,9 +131,7 @@ export default function Nav() {
               </button>
             </div>
 
-            {/* SIDEBAR MENU: Линкүүд */}
             <div className="flex flex-col space-y-1">
-              {/* Цэсний гарчиг хэсэг */}
               <div className="px-2 mb-3 flex items-center gap-2">
                 <div className="w-1 h-4 bg-indigo-600 rounded-full opacity-80"></div>
                 <p className="text-[14px] font-black text-black uppercase tracking-[0.15em]">
@@ -203,7 +195,6 @@ export default function Nav() {
               </div>
             </div>
 
-            {/* FOOTER */}
             <div className="mt-auto pb-2 text-center">
               <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest italic">
                 Version 1.0.4

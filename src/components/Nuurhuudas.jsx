@@ -20,7 +20,6 @@ export default function Nuurhuudas() {
     setShowUrgentModal(false);
   };
 
-  // --- ID ТУЛГАХ ЛОГИК (Админ талтай ижил) ---
   const getFormattedId = (item) => {
     if (!item || !item.createdAt) return "";
     const date = new Date(item.createdAt);
@@ -48,7 +47,6 @@ export default function Nuurhuudas() {
       const json = await res.json();
 
       if (json.success) {
-        // Бүх дата дотроос ID-аар нь шүүж хайх
         const found = json.data.find(
           (item) => getFormattedId(item) === cleanId,
         );
@@ -71,7 +69,6 @@ export default function Nuurhuudas() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] text-slate-900 font-sans relative overflow-x-hidden">
-      {/* 🚨 SOS MODAL */}
       {showUrgentModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
@@ -109,7 +106,6 @@ export default function Nuurhuudas() {
         </div>
       )}
 
-      {/* --- MAIN HERO SECTION --- */}
       <main className="max-w-6xl mx-auto px-6 py-8 md:py-16 lg:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-6 text-center lg:text-left order-2 lg:order-1">
           <div className="inline-block px-3 py-1 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest">
@@ -139,7 +135,6 @@ export default function Nuurhuudas() {
           </div>
         </div>
 
-        {/* --- SEARCH BOX (RIGHT SIDE) --- */}
         <div className="w-full max-w-[360px] mx-auto lg:mr-0 order-1 lg:order-2">
           <div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-2xl shadow-indigo-100/50 border border-slate-50 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
@@ -167,14 +162,12 @@ export default function Nuurhuudas() {
               </button>
             </div>
 
-            {/* ERROR MESSAGE */}
             {errorMsg && (
               <p className="mt-4 text-[9px] font-black text-rose-500 uppercase text-center animate-pulse">
                 {errorMsg}
               </p>
             )}
 
-            {/* TEACHER'S REPLY BOX */}
             {searchResult && (
               <div className="mt-8 animate-in slide-in-from-bottom-4 duration-500">
                 <div
@@ -227,7 +220,6 @@ export default function Nuurhuudas() {
         </div>
       </main>
 
-      {/* --- INFO CARDS SECTION --- */}
       <section className="bg-white py-20 border-t border-slate-50">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
           <InfoCard
@@ -249,7 +241,6 @@ export default function Nuurhuudas() {
         </div>
       </section>
 
-      {/* --- FOOTER --- */}
       <footer className="py-12 text-center border-t border-slate-50 bg-[#FDFDFF]">
         <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.5em] mb-4">
           SafeSpace Mongolia 2026
@@ -264,7 +255,6 @@ export default function Nuurhuudas() {
   );
 }
 
-// Sub-component for Info Cards
 function InfoCard({ icon, title, desc, color = "bg-slate-50 text-slate-800" }) {
   return (
     <div

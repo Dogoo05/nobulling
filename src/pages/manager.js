@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 /**
- * ANTI-BULLY ADMIN SYSTEM v3.0 (PREMIUM)
- * 1. Бүх график дугуй (Donut Chart)
- * 2. Мобайл болон Десктоп төгс загвар (Fully Responsive)
- * 3. Бүрэн логик (Дутуу зүйлгүй)
+ * ANTI-BULLY ADMIN SYSTEM v3.6 (MOBILE RESPONSIVE + TEXT STATUS)
  */
 
 export default function AntiBullyAdminMaster() {
-  // --- ҮНДСЭН STATE-ҮҮД ---
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -20,27 +16,22 @@ export default function AntiBullyAdminMaster() {
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
   const [searchTerm, setSearchTerm] = useState("");
 
-  // --- ШҮҮЛТҮҮРҮҮД ---
   const [filterType, setFilterType] = useState("Бүгд");
   const [filterLevel, setFilterLevel] = useState("Бүгд");
   const [filterStatus, setFilterStatus] = useState("Бүгд");
 
-  // --- МЭДЭГДЭЛ (TOAST) ---
   const showNotification = useCallback((msg, type = "success") => {
     setToast({ show: true, message: msg, type });
     setTimeout(() => setToast({ show: false, message: "", type: "" }), 3500);
   }, []);
 
-  // --- ӨГӨГДӨЛ ТАТАХ (API FETCH) ---
   const fetchData = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/huselt");
       if (!res.ok) throw new Error("Сэрвэр хариу өгсөнгүй");
       const json = await res.json();
-      if (json.success) {
-        setData(json.data || []);
-      }
+      if (json.success) setData(json.data || []);
     } catch (err) {
       showNotification(err.message, "error");
     } finally {
@@ -52,7 +43,6 @@ export default function AntiBullyAdminMaster() {
     if (isLoggedIn) fetchData();
   }, [isLoggedIn]);
 
-  // --- ID ФОРМАТЛАХ (SOS-20260408-ABCD) ---
   const formatCustomId = useCallback((item) => {
     if (!item || !item.createdAt) return "ID";
     const date = new Date(item.createdAt);
@@ -61,13 +51,10 @@ export default function AntiBullyAdminMaster() {
       String(date.getMonth() + 1).padStart(2, "0") +
       String(date.getDate()).padStart(2, "0");
     const randomPart = item._id ? item._id.slice(-4).toUpperCase() : "RAND";
-    const isSos =
-      item.isUrgent ||
-      (item.answers && item.answers[1] && item.answers[1].includes("🚨"));
+    const isSos = item.isUrgent || item.answers?.[1]?.includes("🚨");
     return isSos ? `SOS-${dateStr}-${randomPart}` : `${dateStr}-${randomPart}`;
   }, []);
 
-  // --- СТАТИСТИК ТООЦООЛОЛ (ДУГУЙ ГРАФИКТ ЗОРИУЛСАН) ---
   const stats = useMemo(() => {
     const total = data.length;
     if (total === 0)
@@ -83,7 +70,6 @@ export default function AntiBullyAdminMaster() {
         solved: 0,
         pending: 0,
       };
-
     const female = data.filter((i) =>
       i.answers?.[9]?.includes("Эмэгтэй"),
     ).length;
@@ -95,7 +81,6 @@ export default function AntiBullyAdminMaster() {
     const medium = data.filter((i) => i.answers?.[3]?.includes("⚠️")).length;
     const low = data.filter((i) => i.answers?.[3]?.includes("⚖️")).length;
     const solved = data.filter((i) => i.status === "Шийдвэрлэсэн").length;
-
     return {
       total,
       female,
@@ -110,7 +95,6 @@ export default function AntiBullyAdminMaster() {
     };
   }, [data]);
 
-  // --- ШҮҮЛТҮҮРИЙН ЛОГИК ---
   const filteredData = useMemo(() => {
     return data
       .filter((item) => {
@@ -128,7 +112,6 @@ export default function AntiBullyAdminMaster() {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [data, filterType, filterLevel, filterStatus, searchTerm, formatCustomId]);
 
-  // --- ХАРИУ ИЛГЭЭХ ---
   const handleReplySubmit = async () => {
     if (!replyText.trim() || isSubmitting) return;
     setIsSubmitting(true);
@@ -155,13 +138,12 @@ export default function AntiBullyAdminMaster() {
     }
   };
 
-  // --- НЭВТРЭХ ХЭСЭГ ---
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-[#F0F4F8] flex items-center justify-center p-6 font-sans">
         <div className="w-full max-w-sm bg-white p-10 rounded-[3rem] shadow-2xl border border-white">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] mx-auto flex items-center justify-center text-white text-4xl font-black italic shadow-xl shadow-indigo-100 mb-4">
+            <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] mx-auto flex items-center justify-center text-white text-4xl font-black italic shadow-xl mb-4">
               A
             </div>
             <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-800">
@@ -183,7 +165,7 @@ export default function AntiBullyAdminMaster() {
             />
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+              className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg"
             >
               Нэвтрэх
             </button>
@@ -194,35 +176,30 @@ export default function AntiBullyAdminMaster() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] p-3 md:p-10 font-sans text-slate-800 selection:bg-indigo-100">
+    <div className="min-h-screen bg-[#F8F9FB] p-4 md:p-10 font-sans text-slate-800">
       {toast.show && <Toast msg={toast.message} type={toast.type} />}
 
       <div className="max-w-[1300px] mx-auto space-y-6">
-        {/* HEADER SECTION */}
-        <header className="flex flex-col md:flex-row justify-between items-center bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] shadow-sm border border-white gap-6 sticky top-4 z-40">
+        {/* HEADER */}
+        <header className="flex flex-col md:flex-row justify-between items-center bg-white/80 backdrop-blur-md p-5 rounded-[2rem] shadow-sm border border-white gap-4 sticky top-4 z-40">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl font-black italic">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg font-black italic">
               A
             </div>
-            <div>
-              <h1 className="text-lg font-black italic uppercase tracking-tighter text-indigo-600 leading-none">
-                Admin Master
-              </h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                Management Portal
-              </p>
-            </div>
+            <h1 className="text-lg font-black italic uppercase text-indigo-600">
+              Admin Master
+            </h1>
           </div>
-          <nav className="flex bg-slate-100 p-1.5 rounded-2xl w-full md:w-auto shadow-inner">
+          <nav className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
             <button
               onClick={() => setActiveTab("manager")}
-              className={`flex-1 md:flex-none px-10 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === "manager" ? "bg-white text-indigo-600 shadow-md" : "text-slate-400"}`}
+              className={`flex-1 px-8 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all ${activeTab === "manager" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400"}`}
             >
               Менежер
             </button>
             <button
               onClick={() => setActiveTab("stats")}
-              className={`flex-1 md:flex-none px-10 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === "stats" ? "bg-white text-indigo-600 shadow-md" : "text-slate-400"}`}
+              className={`flex-1 px-8 py-2.5 rounded-lg text-[10px] font-black uppercase transition-all ${activeTab === "stats" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400"}`}
             >
               Статистик
             </button>
@@ -230,9 +207,8 @@ export default function AntiBullyAdminMaster() {
         </header>
 
         {activeTab === "manager" ? (
-          /* ================= MANAGER TAB ================= */
-          <div className="space-y-6 animate-in fade-in duration-500">
-            {/* COMPACT SUMMARY CARDS */}
+          <div className="space-y-6">
+            {/* STAT CARDS */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <SummaryCard
                 title="НИЙТ"
@@ -250,27 +226,22 @@ export default function AntiBullyAdminMaster() {
                 color="border-rose-500"
               />
               <SummaryCard
-                title="ХАСАГДСАН"
+                title="ШИЙДВЭРЛЭВ"
                 value={stats.solved}
                 color="border-emerald-500"
               />
             </div>
 
-            {/* SEARCH & FILTERS */}
-            <div className="bg-white p-6 md:p-8 rounded-[3rem] shadow-sm border border-slate-50 space-y-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="ID хайх (Жишээ: SOS-2026...)"
-                  className="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-6 text-xs font-bold outline-none ring-2 ring-transparent focus:ring-indigo-500 transition-all shadow-inner"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 opacity-30">
-                  🔍
-                </span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {/* FILTERS */}
+            <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-50 space-y-4">
+              <input
+                type="text"
+                placeholder="ID хайх..."
+                className="w-full bg-slate-50 rounded-xl py-4 px-6 text-xs font-bold outline-none ring-1 ring-slate-100 focus:ring-indigo-500 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <FilterSelect
                   label="Төрөл"
                   value={filterType}
@@ -295,28 +266,28 @@ export default function AntiBullyAdminMaster() {
               </div>
             </div>
 
-            {/* RESPONSIVE TABLE */}
-            <div className="bg-white rounded-[3rem] shadow-sm overflow-hidden border border-slate-50 min-h-[400px]">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left min-w-[700px]">
+            {/* RESPONSIVE TABLE / LIST */}
+            <div className="bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-50">
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left">
                   <thead className="bg-slate-50 text-[9px] font-black uppercase text-slate-400 italic">
                     <tr>
                       <th className="px-8 py-6">ID дугаар</th>
-                      <th className="px-8 py-6">Ирсэн огноо</th>
+                      <th className="px-8 py-6">Огноо</th>
                       <th className="px-8 py-6">Төрөл</th>
-                      <th className="px-8 py-6 text-center">Зураг</th>
-                      <th className="px-8 py-6">Төлөв</th>
-                      <th className="px-8 py-6 text-right">Үйлдэл</th>
+                      <th className="px-8 py-6">Түвшин</th>
+                      <th className="px-8 py-6 text-center">Төлөв</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {loading ? (
                       <tr>
                         <td
-                          colSpan="6"
-                          className="py-20 text-center text-[10px] font-black uppercase text-slate-300 animate-pulse tracking-widest"
+                          colSpan="5"
+                          className="py-20 text-center font-black uppercase text-slate-300 animate-pulse"
                         >
-                          Мэдээлэл ачаалж байна...
+                          Ачаалж байна...
                         </td>
                       </tr>
                     ) : (
@@ -336,40 +307,17 @@ export default function AntiBullyAdminMaster() {
                               {formatCustomId(item)}
                             </span>
                           </td>
-                          <td className="px-8 py-5">
-                            <p className="text-[10px] font-bold text-slate-700">
-                              {new Date(item.createdAt).toLocaleDateString()}
-                            </p>
-                            <p className="text-[8px] font-bold text-slate-300">
-                              {new Date(item.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
+                          <td className="px-8 py-5 text-[10px] font-bold text-slate-700">
+                            {new Date(item.createdAt).toLocaleDateString()}
                           </td>
-                          <td className="px-8 py-5 text-[10px] font-black uppercase text-indigo-600 truncate max-w-[150px]">
+                          <td className="px-8 py-5 text-[10px] font-black uppercase text-indigo-600">
                             {item.answers?.[1] || "—"}
                           </td>
-                          <td className="px-8 py-5 text-center">
-                            {item.imageUrl || item.image ? (
-                              <div className="w-9 h-9 bg-slate-100 rounded-xl mx-auto overflow-hidden border border-white shadow-sm group-hover:scale-110 transition-transform">
-                                <img
-                                  src={item.imageUrl || item.image}
-                                  className="w-full h-full object-cover"
-                                  alt="p"
-                                />
-                              </div>
-                            ) : (
-                              <span className="text-slate-200">—</span>
-                            )}
-                          </td>
                           <td className="px-8 py-5">
-                            <div
-                              className={`w-2.5 h-2.5 rounded-full mx-auto ${item.status === "Шийдвэрлэсэн" ? "bg-emerald-500 shadow-lg shadow-emerald-100" : "bg-orange-400 animate-pulse"}`}
-                            ></div>
+                            <LevelBadge level={item.answers?.[3]} />
                           </td>
-                          <td className="px-8 py-5 text-right font-black uppercase text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                            Нээх
+                          <td className="px-8 py-5 text-center">
+                            <StatusText status={item.status} />
                           </td>
                         </tr>
                       ))
@@ -377,21 +325,51 @@ export default function AntiBullyAdminMaster() {
                   </tbody>
                 </table>
               </div>
-              {!loading && filteredData.length === 0 && (
-                <div className="p-20 text-center flex flex-col items-center opacity-20">
-                  <span className="text-5xl mb-4">📂</span>
-                  <p className="text-xs font-black uppercase tracking-widest">
-                    Илэрц олдсонгүй
-                  </p>
-                </div>
-              )}
+
+              {/* Mobile View (Card Style) */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {loading ? (
+                  <div className="p-10 text-center font-black uppercase text-slate-300">
+                    Ачаалж байна...
+                  </div>
+                ) : (
+                  filteredData.map((item) => (
+                    <div
+                      key={item._id}
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setReplyText(item.adminReply || "");
+                      }}
+                      className="p-5 active:bg-slate-50 space-y-3"
+                    >
+                      <div className="flex justify-between items-start">
+                        <span
+                          className={`px-2 py-1 rounded-lg text-[10px] font-mono font-black ${item.isUrgent || item.answers?.[1]?.includes("🚨") ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-500"}`}
+                        >
+                          {formatCustomId(item)}
+                        </span>
+                        <StatusText status={item.status} />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="text-[10px] font-black uppercase text-indigo-600 truncate max-w-[60%]">
+                          {item.answers?.[1] || "—"}
+                        </div>
+                        <LevelBadge level={item.answers?.[3]} />
+                      </div>
+                      <div className="text-[9px] font-bold text-slate-400 italic">
+                        Огноо: {new Date(item.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         ) : (
-          /* ================= STATS TAB (ALL DONUT) ================= */
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-700 pb-20">
+          /* STATS TAB (SAME AS BEFORE BUT RESPONSIVE) */
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in pb-20">
             <DonutChartCard
-              title="Хүйсний харьцаа"
+              title="Хүйс"
               total={stats.female + stats.male}
               items={[
                 { label: "Эмэгтэй", count: stats.female, color: "#EC4899" },
@@ -399,23 +377,15 @@ export default function AntiBullyAdminMaster() {
               ]}
             />
             <DonutChartCard
-              title="Хүсэлтийн төрөл"
+              title="Төрөл"
               total={stats.total}
               items={[
-                {
-                  label: "🚨 SOS Яаралтай",
-                  count: stats.sos,
-                  color: "#F43F5E",
-                },
-                {
-                  label: "📝 Ердийн хүсэлт",
-                  count: stats.normal,
-                  color: "#6366F1",
-                },
+                { label: "🚨 SOS", count: stats.sos, color: "#F43F5E" },
+                { label: "📝 Ердийн", count: stats.normal, color: "#6366F1" },
               ]}
             />
             <DonutChartCard
-              title="Хүндрэлийн түвшин"
+              title="Түвшин"
               total={stats.heavy + stats.medium + stats.low}
               items={[
                 { label: "🔥 Маш хүнд", count: stats.heavy, color: "#EF4444" },
@@ -427,41 +397,32 @@ export default function AntiBullyAdminMaster() {
         )}
       </div>
 
-      {/* ================= MODAL DIALOG ================= */}
+      {/* MODAL (UNCHANGED BUT ENSURE MAX-WIDTH ON MOBILE) */}
       {selectedItem && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-end md:items-center justify-center p-0 md:p-6 overflow-hidden">
-          <div className="bg-white w-full max-w-5xl rounded-t-[3rem] md:rounded-[3.5rem] shadow-2xl overflow-hidden max-h-[96vh] flex flex-col animate-in slide-in-from-bottom-10 duration-500">
-            <div className="flex justify-between items-center p-6 md:p-8 border-b bg-slate-50/50 sticky top-0 z-10">
-              <div>
-                <h2 className="text-xl font-black italic uppercase text-indigo-600 leading-none">
-                  {formatCustomId(selectedItem)}
-                </h2>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 italic">
-                  Төлөв: {selectedItem.status || "Шинэ"}
-                </p>
-              </div>
+          <div className="bg-white w-full max-w-5xl rounded-t-[2.5rem] md:rounded-[3rem] shadow-2xl overflow-hidden max-h-[96vh] flex flex-col animate-in slide-in-from-bottom-5">
+            <div className="flex justify-between items-center p-6 border-b bg-slate-50/50">
+              <h2 className="text-lg font-black italic uppercase text-indigo-600">
+                {formatCustomId(selectedItem)}
+              </h2>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center font-bold text-slate-400 hover:text-rose-500 transition-all"
+                className="text-slate-400 font-bold"
               >
                 ✕
               </button>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* АСУУЛТ ХАРИУЛТУУД */}
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
+              {/* Modal content same as before but ensured layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase text-slate-300 italic px-1">
-                    Мэдээллийн дэлгэрэнгүй
-                  </p>
                   {Object.entries(selectedItem.answers || {}).map(
                     ([key, val]) => (
                       <div
                         key={key}
-                        className="bg-slate-50 p-6 rounded-[1.5rem] border border-white shadow-sm hover:shadow-md transition-shadow"
+                        className="bg-slate-50 p-5 rounded-2xl border border-white shadow-sm"
                       >
-                        <p className="text-[8px] font-black text-indigo-400 uppercase italic mb-2 tracking-widest">
+                        <p className="text-[8px] font-black text-indigo-400 uppercase mb-1 tracking-widest italic">
                           Асуулт {key}
                         </p>
                         <p className="text-xs font-bold text-slate-700 leading-relaxed">
@@ -471,44 +432,32 @@ export default function AntiBullyAdminMaster() {
                     ),
                   )}
                 </div>
-
-                {/* ФАЙЛ БОЛОН ХАРИУ АРГА ХЭМЖЭЭ */}
-                <div className="space-y-8">
-                  <div className="space-y-3">
-                    <p className="text-[10px] font-black uppercase text-slate-300 italic px-1">
-                      Хавсаргасан файл
-                    </p>
-                    {selectedItem.imageUrl || selectedItem.image ? (
-                      <div className="rounded-[2rem] overflow-hidden shadow-2xl border-4 border-slate-100 group">
-                        <img
-                          src={selectedItem.imageUrl || selectedItem.image}
-                          className="w-full object-cover group-hover:scale-105 transition-transform duration-700"
-                          alt="evidence"
-                        />
-                      </div>
-                    ) : (
-                      <div className="bg-slate-100/50 rounded-[2rem] aspect-video border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 italic text-[10px] font-bold uppercase">
-                        Зураг хавсаргаагүй
-                      </div>
-                    )}
-                  </div>
+                <div className="space-y-6">
+                  {selectedItem.imageUrl || selectedItem.image ? (
+                    <img
+                      src={selectedItem.imageUrl || selectedItem.image}
+                      className="w-full rounded-2xl shadow-lg border-2 border-slate-50"
+                      alt="evidence"
+                    />
+                  ) : (
+                    <div className="bg-slate-100 rounded-2xl aspect-video flex items-center justify-center text-[10px] font-bold text-slate-300 uppercase italic">
+                      Зураггүй
+                    </div>
+                  )}
 
                   <div className="pt-6 border-t border-slate-100">
                     {selectedItem.status !== "Шийдвэрлэсэн" ? (
                       <div className="space-y-4">
-                        <p className="text-[10px] font-black uppercase text-slate-800 italic px-1">
-                          Админы хариу / Шийдвэр
-                        </p>
                         <textarea
-                          className="w-full bg-slate-50 rounded-2xl p-6 text-sm font-bold outline-none ring-2 ring-transparent focus:ring-indigo-500 shadow-inner min-h-[150px]"
-                          placeholder="Энд авсан арга хэмжээг бичнэ үү..."
+                          className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-bold outline-none ring-1 ring-slate-100 focus:ring-indigo-500 shadow-inner min-h-[120px]"
+                          placeholder="Шийдвэрийг бичнэ үү..."
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                         />
                         <button
                           onClick={handleReplySubmit}
                           disabled={isSubmitting || !replyText.trim()}
-                          className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all ${isSubmitting || !replyText.trim() ? "bg-slate-200 text-slate-400" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"}`}
+                          className={`w-full py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg transition-all ${isSubmitting || !replyText.trim() ? "bg-slate-200 text-slate-400" : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"}`}
                         >
                           {isSubmitting
                             ? "Түр хүлээнэ үү..."
@@ -516,22 +465,13 @@ export default function AntiBullyAdminMaster() {
                         </button>
                       </div>
                     ) : (
-                      <div className="bg-emerald-50 p-8 rounded-[2rem] border border-emerald-100 shadow-lg shadow-emerald-50">
-                        <div className="flex justify-between items-center mb-4">
-                          <p className="text-[10px] font-black uppercase text-emerald-500 italic">
-                            Шийдвэрлэсэн тайлбар:
-                          </p>
-                          <span className="text-xl">✅</span>
-                        </div>
-                        <p className="text-sm font-bold text-slate-700 italic leading-relaxed">
+                      <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                        <p className="text-[10px] font-black uppercase text-emerald-500 mb-2 italic">
+                          Шийдвэрлэсэн тайлбар:
+                        </p>
+                        <p className="text-sm font-bold text-slate-700 italic">
                           "{selectedItem.adminReply || "Тайлбар байхгүй."}"
                         </p>
-                        {selectedItem.resolvedAt && (
-                          <p className="text-[8px] font-black text-slate-300 mt-6 text-right">
-                            Дууссан:{" "}
-                            {new Date(selectedItem.resolvedAt).toLocaleString()}
-                          </p>
-                        )}
                       </div>
                     )}
                   </div>
@@ -545,17 +485,46 @@ export default function AntiBullyAdminMaster() {
   );
 }
 
-// ================= UI SUB-COMPONENTS =================
+// --- ТУСЛАХ КОМПОНЕНТУУД ---
+
+// Төлөвийг текстээр харуулах (Text Status)
+function StatusText({ status }) {
+  const isSolved = status === "Шийдвэрлэсэн";
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${isSolved ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600 animate-pulse"}`}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${isSolved ? "bg-emerald-500" : "bg-orange-500"}`}
+      ></span>
+      {status || "Шинэ"}
+    </span>
+  );
+}
+
+// Түвшинг харуулах (Level Badge)
+function LevelBadge({ level }) {
+  let style = "bg-slate-100 text-slate-400";
+  if (level?.includes("🔥")) style = "bg-red-50 text-red-600";
+  else if (level?.includes("⚠️")) style = "bg-orange-50 text-orange-600";
+  else if (level?.includes("⚖️")) style = "bg-emerald-50 text-emerald-600";
+
+  return (
+    <span className={`px-2 py-1 rounded-md font-bold text-[9px] ${style}`}>
+      {level || "---"}
+    </span>
+  );
+}
 
 function SummaryCard({ title, value, color }) {
   return (
     <div
-      className={`bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border-b-8 transition-transform hover:-translate-y-1 duration-300 ${color}`}
+      className={`bg-white p-5 rounded-2xl shadow-sm border-b-4 transition-all hover:scale-[1.02] ${color}`}
     >
-      <p className="text-[9px] font-black text-slate-300 italic uppercase mb-1 tracking-widest leading-none">
+      <p className="text-[8px] font-black text-slate-300 italic uppercase mb-1">
         {title}
       </p>
-      <p className="text-3xl font-black italic tracking-tighter text-slate-800">
+      <p className="text-2xl font-black italic text-slate-800 tracking-tighter">
         {value}
       </p>
     </div>
@@ -566,13 +535,12 @@ function DonutChartCard({ title, items, total }) {
   const radius = 35;
   const circumference = 2 * Math.PI * radius;
   let currentOffset = 0;
-
   return (
-    <div className="bg-white p-10 rounded-[3.5rem] shadow-sm flex flex-col items-center border border-white hover:shadow-xl transition-all group">
-      <h3 className="text-slate-800 font-black text-[10px] uppercase mb-10 italic tracking-widest">
+    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center border border-white">
+      <h3 className="text-slate-800 font-black text-[9px] uppercase mb-8 italic">
         {title}
       </h3>
-      <div className="relative w-44 h-44 mb-10">
+      <div className="relative w-32 h-32 mb-8">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
           <circle
             cx="50"
@@ -580,10 +548,9 @@ function DonutChartCard({ title, items, total }) {
             r={radius}
             fill="transparent"
             stroke="#F8FAFC"
-            strokeWidth="12"
+            strokeWidth="10"
           />
           {items.map((item, idx) => {
-            if (item.count === 0) return null;
             const percentage = (item.count / (total || 1)) * circumference;
             const strokeDashoffset = circumference - percentage;
             const offset = currentOffset;
@@ -596,7 +563,7 @@ function DonutChartCard({ title, items, total }) {
                 r={radius}
                 fill="transparent"
                 stroke={item.color}
-                strokeWidth="12"
+                strokeWidth="10"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 style={{
@@ -604,33 +571,23 @@ function DonutChartCard({ title, items, total }) {
                   transformOrigin: "50% 50%",
                 }}
                 strokeLinecap="round"
-                className="transition-all duration-1000"
               />
             );
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-4xl font-black text-slate-800 italic group-hover:scale-110 transition-transform">
+          <span className="text-2xl font-black text-slate-800 italic">
             {total}
-          </span>
-          <span className="text-[8px] font-black text-slate-300 uppercase">
-            Нийт
           </span>
         </div>
       </div>
-      <div className="w-full space-y-3">
+      <div className="w-full space-y-2">
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="flex justify-between items-center text-[10px] font-black uppercase"
+            className="flex justify-between items-center text-[9px] font-black uppercase"
           >
-            <div className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full shadow-sm"
-                style={{ backgroundColor: item.color }}
-              ></div>
-              <span className="text-slate-500">{item.label}</span>
-            </div>
+            <span className="text-slate-500">{item.label}</span>
             <span className="text-slate-800 font-mono">{item.count}</span>
           </div>
         ))}
@@ -641,14 +598,14 @@ function DonutChartCard({ title, items, total }) {
 
 function FilterSelect({ label, value, options, onChange }) {
   return (
-    <div className="flex-1 space-y-2">
-      <p className="text-[9px] font-black uppercase text-slate-300 ml-1 italic">
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-black uppercase text-slate-300 ml-1 italic">
         {label}
       </p>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-slate-50 border-none rounded-xl py-3.5 px-4 text-[10px] font-bold outline-none cursor-pointer ring-1 ring-slate-100 focus:ring-indigo-500 transition-all"
+        className="w-full bg-slate-50 rounded-xl py-3 px-3 text-[10px] font-bold outline-none ring-1 ring-slate-100 focus:ring-indigo-500"
       >
         {options.map((o) => (
           <option key={o} value={o}>
@@ -663,7 +620,7 @@ function FilterSelect({ label, value, options, onChange }) {
 function Toast({ msg, type }) {
   return (
     <div
-      className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-10 py-5 rounded-[2rem] shadow-2xl font-black uppercase text-[10px] tracking-[0.2em] text-white animate-in slide-in-from-top-10 duration-500 ${type === "error" ? "bg-rose-500" : "bg-indigo-600"}`}
+      className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-8 py-4 rounded-2xl shadow-xl font-black uppercase text-[9px] tracking-widest text-white animate-bounce ${type === "error" ? "bg-rose-500" : "bg-indigo-600"}`}
     >
       {msg}
     </div>
