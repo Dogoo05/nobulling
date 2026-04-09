@@ -194,7 +194,7 @@ export default function AntiBullyAdminMaster() {
               NB
             </div>
             <h1 className="text-sm font-black uppercase text-indigo-900 tracking-tighter italic">
-              NoBully Admin
+              No-Bullying Admin
             </h1>
           </div>
           <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-100 w-full md:w-auto">
