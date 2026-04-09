@@ -27,7 +27,7 @@ export default function Admin() {
 
   const filteredData = data.filter((item) => {
     const isResolved = item.status === "Шийдвэрлэсэн";
-    // customId байхгүй бол _id-аар нь хайх нөхцөл нэмэв
+
     const idToSearch = item.customId || item.id || "";
     const matchSearch = idToSearch
       .toUpperCase()
@@ -42,7 +42,6 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
       <div className="max-w-4xl mx-auto pt-6 px-4">
-        {/* HEADER */}
         <header className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">
@@ -60,7 +59,6 @@ export default function Admin() {
           </button>
         </header>
 
-        {/* SEARCH */}
         <div className="mb-6 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
           <input
             type="text"
@@ -71,7 +69,6 @@ export default function Admin() {
           />
         </div>
 
-        {/* TABLE LIST */}
         <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-900 text-[10px] font-black uppercase text-slate-300 tracking-widest">
@@ -106,7 +103,6 @@ export default function Admin() {
 
                   return (
                     <React.Fragment key={itemId}>
-                      {/* Үндсэн мөр */}
                       <tr
                         className={`cursor-pointer transition-all ${isExpanded ? "bg-emerald-50/40" : "hover:bg-slate-50"}`}
                         onClick={() => toggleRow(itemId)}
@@ -139,7 +135,6 @@ export default function Admin() {
                         </td>
                       </tr>
 
-                      {/* Дэлгэрэнгүй хэсэг (Accordion) */}
                       {isExpanded && (
                         <tr>
                           <td

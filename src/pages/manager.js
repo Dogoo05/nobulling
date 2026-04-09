@@ -187,7 +187,6 @@ export default function AntiBullyAdminMaster() {
       {toast.show && <Toast msg={toast.message} type={toast.type} />}
 
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* HEADER - Responsive Flex */}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-600 p-2 rounded-xl text-white font-black italic">
@@ -215,7 +214,6 @@ export default function AntiBullyAdminMaster() {
 
         {activeTab === "manager" ? (
           <div className="space-y-4">
-            {/* SEARCH & FILTERS - Responsive Wrap */}
             <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col lg:flex-row items-center gap-4 lg:gap-8">
               <input
                 type="text"
@@ -239,8 +237,6 @@ export default function AntiBullyAdminMaster() {
                 />
               </div>
             </div>
-
-            {/* TABLE CONTAINER - Horizontal Scroll for Mobile */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-x-auto">
               <table className="w-full text-center min-w-[800px]">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
@@ -316,7 +312,6 @@ export default function AntiBullyAdminMaster() {
             </div>
           </div>
         ) : (
-          /* STATS GRID - Responsive 1 to 3 columns */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
             <DonutChart
               title="ТУСЛАМЖИЙН ТӨРӨЛ"
@@ -376,7 +371,6 @@ export default function AntiBullyAdminMaster() {
         )}
       </div>
 
-      {/* MODAL - Full width on Mobile, Large on Desktop */}
       {selectedItem && (
         <div className="fixed inset-0 bg-indigo-950/50 backdrop-blur-md z-[100] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div className="bg-white w-full max-w-6xl rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row max-h-[95vh] md:max-h-[90vh] overflow-hidden animate-in zoom-in duration-300">

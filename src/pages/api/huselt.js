@@ -8,17 +8,14 @@ export const config = {
 export default async function handler(req, res) {
   const client = await clientPromise;
   const db = client.db("test");
-  const { id } = req.query; // URL-аас ирсэн ID (жишээ нь: ?id=SOS-2024...)
+  const { id } = req.query;
 
-  // --- GET: БҮХ ДАТА ЭСВЭЛ ГАНЦААРЧИЛСАН ХАЙЛТ ---
   if (req.method === "GET") {
     try {
-      // 1. Хэрэв ID ирсэн бол хайлт хийнэ
       if (id) {
         const cleanId = id.trim();
         let query = {};
 
-        // MongoDB-ийн өөрийнх нь _id мөн эсэхийг шалгах
         if (cleanId.length === 24) {
           try {
             query = { _id: new ObjectId(cleanId) };
@@ -29,7 +26,6 @@ export default async function handler(req, res) {
           query = { customId: cleanId };
         }
 
-        // Хоёр цуглуулгаас (collections) хоёулангаас нь хайж үзэх
         let result = await db.collection("answers").findOne(query);
         if (!result) {
           result = await db.collection("sos_requests").findOne(query);
@@ -42,7 +38,6 @@ export default async function handler(req, res) {
           .json({ success: false, error: "Мэдээлэл олдсонгүй" });
       }
 
-      // 2. Хэрэв ID байхгүй бол бүх датаг татна (Admin хэсэгт зориулагдсан)
       const [normal, sos] = await Promise.all([
         db.collection("answers").find({}).toArray(),
         db.collection("sos_requests").find({}).toArray(),
@@ -56,7 +51,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- PUT: МЕНЕЖЕР ХАРИУ БИЧИХ ХЭСЭГ ---
   if (req.method === "PUT") {
     try {
       const { status, adminReply } = req.body;
@@ -73,7 +67,6 @@ export default async function handler(req, res) {
         },
       };
 
-      // Хайх query бэлдэх
       let query = {};
       if (id.length === 24) {
         try {
@@ -85,7 +78,6 @@ export default async function handler(req, res) {
         query = { customId: id };
       }
 
-      // Эхлээд 'answers'-аас хайна, олдохгүй бол 'sos_requests'-аас хайна
       let result = await db.collection("answers").updateOne(query, updateDoc);
       if (result.matchedCount === 0) {
         result = await db
@@ -103,7 +95,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- POST: ШИНЭЭР ХҮСЭЛТ ИЛГЭЭХ ---
   if (req.method === "POST") {
     try {
       const body = req.body;

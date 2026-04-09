@@ -29,7 +29,6 @@ export default function Nuurhuudas() {
     setSearchResult(null);
 
     try {
-      // 1. API руу шууд тухайн ID-аар хайлт явуулна
       const res = await fetch(`/api/huselt?id=${encodeURIComponent(inputId)}`);
       const json = await res.json();
 
@@ -47,7 +46,6 @@ export default function Nuurhuudas() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] text-slate-900 font-sans relative">
-      {/* 🚨 SOS MODAL */}
       {showUrgentModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
@@ -80,7 +78,6 @@ export default function Nuurhuudas() {
         </div>
       )}
 
-      {/* HERO SECTION */}
       <main className="max-w-6xl mx-auto px-6 py-12 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-6 text-center lg:text-left">
           <div className="inline-block px-3 py-1 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest">
@@ -106,7 +103,6 @@ export default function Nuurhuudas() {
           </div>
         </div>
 
-        {/* SEARCH BOX */}
         <div className="w-full max-w-[400px] mx-auto lg:mr-0">
           <div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-2xl border border-slate-50 relative overflow-hidden">
             <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-900 text-center relative z-10">
@@ -139,7 +135,6 @@ export default function Nuurhuudas() {
               </p>
             )}
 
-            {/* SEARCH RESULT DISPLAY */}
             {searchResult && (
               <div className="mt-8 animate-in slide-in-from-bottom-4">
                 <div
