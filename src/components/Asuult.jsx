@@ -274,7 +274,7 @@ export default function Asuult() {
             disabled={loading}
             className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 active:scale-95 transition-all"
           >
-            {loading ? "ИЛГЭЭЖ БАЙНА..." : "АНКЕТ ИЛГЭЭХ"}
+            {loading ? "ИЛГЭЭЖ БАЙНА..." : "ИЛГЭЭХ"}
           </button>
         </div>
       </div>
