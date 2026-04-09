@@ -20,31 +20,8 @@ export default function Nuurhuudas() {
     setShowUrgentModal(false);
   };
 
-  /**
-   * Хайлтын ID-г үүсгэх функц
-   * Админ болон Хэрэглэгч талд яг ижил логикоор ажиллана.
-   */
-  const getFormattedId = (item) => {
-    if (!item || !item.createdAt) return "";
-    const date = new Date(item.createdAt);
-    const dateStr =
-      date.getFullYear() +
-      String(date.getMonth() + 1).padStart(2, "0") +
-      String(date.getDate()).padStart(2, "0");
-    const randomPart = item._id ? item._id.slice(-4).toUpperCase() : "RAND";
-
-    // SOS эсэхийг олон төрлөөр шалгах
-    const isSos =
-      item.isUrgent ||
-      item.type === "SOS" ||
-      (item.answers &&
-        (item.answers[1]?.includes("🚨") || item.answers[1]?.includes("SOS")));
-
-    return isSos ? `SOS-${dateStr}-${randomPart}` : `${dateStr}-${randomPart}`;
-  };
-
   const handleSearch = async () => {
-    let inputId = searchId.trim().toUpperCase();
+    const inputId = searchId.trim().toUpperCase();
     if (!inputId) return;
 
     setIsSearching(true);
@@ -52,30 +29,17 @@ export default function Nuurhuudas() {
     setSearchResult(null);
 
     try {
-      const res = await fetch("/api/huselt");
+      // 1. API руу шууд тухайн ID-аар хайлт явуулна
+      const res = await fetch(`/api/huselt?id=${encodeURIComponent(inputId)}`);
       const json = await res.json();
 
-      if (json.success) {
-        // Оролтын ID-г өгөгдлийн сан дахь бүх дататай тулгаж хайх
-        const found = json.data.find((item) => {
-          const generatedId = getFormattedId(item);
-          // Хэрэглэгч SOS- гэж бичээгүй байсан ч хайж олох боломжтой болгох
-          return (
-            generatedId === inputId ||
-            generatedId.replace("SOS-", "") === inputId
-          );
-        });
-
-        if (found) {
-          setSearchResult(found);
-        } else {
-          setErrorMsg("Уучлаарай, ийм ID кодтой мэдээлэл олдсонгүй.");
-        }
+      if (json.success && json.data) {
+        setSearchResult(json.data);
       } else {
-        setErrorMsg("Мэдээлэл татахад алдаа гарлаа.");
+        setErrorMsg("Уучлаарай, ийм ID-тай мэдээлэл олдсонгүй.");
       }
     } catch (e) {
-      setErrorMsg("Сүлжээний алдаа гарлаа.");
+      setErrorMsg("Сүлжээний алдаа гарлаа. Дахин оролдоно уу.");
     } finally {
       setIsSearching(false);
     }
@@ -116,7 +80,7 @@ export default function Nuurhuudas() {
         </div>
       )}
 
-      {/* HERO & SEARCH SECTION */}
+      {/* HERO SECTION */}
       <main className="max-w-6xl mx-auto px-6 py-12 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-6 text-center lg:text-left">
           <div className="inline-block px-3 py-1 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest">
@@ -129,7 +93,7 @@ export default function Nuurhuudas() {
           <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 pt-4">
             <Link
               href="/asuult"
-              className="bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all"
+              className="bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"
             >
               Тусламж хүсэх →
             </Link>
@@ -143,9 +107,8 @@ export default function Nuurhuudas() {
         </div>
 
         {/* SEARCH BOX */}
-        <div className="w-full max-w-[380px] mx-auto lg:mr-0">
+        <div className="w-full max-w-[400px] mx-auto lg:mr-0">
           <div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-2xl border border-slate-50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
             <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-900 text-center relative z-10">
               Хариу шалгах
             </h2>
@@ -157,20 +120,21 @@ export default function Nuurhuudas() {
               <input
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
-                placeholder="ID CODE (ЖИШЭЭ: 2026...)"
-                className="w-full bg-slate-50 border-2 border-slate-50 focus:border-indigo-600 p-5 rounded-2xl text-sm font-black outline-none text-center uppercase tracking-[0.15em] transition-all"
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="ID CODE (ЖИШЭЭ: SOS-...)"
+                className="w-full bg-slate-50 border-2 border-slate-50 focus:border-indigo-600 p-5 rounded-2xl text-sm font-black outline-none text-center uppercase tracking-[0.1em] transition-all"
               />
               <button
                 onClick={handleSearch}
                 disabled={isSearching}
-                className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg"
+                className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg disabled:opacity-50"
               >
                 {isSearching ? "Хайж байна..." : "ШАЛГАХ"}
               </button>
             </div>
 
             {errorMsg && (
-              <p className="mt-4 text-[9px] font-black text-rose-500 uppercase text-center animate-pulse">
+              <p className="mt-4 text-[9px] font-black text-rose-500 uppercase text-center">
                 {errorMsg}
               </p>
             )}
@@ -179,49 +143,40 @@ export default function Nuurhuudas() {
             {searchResult && (
               <div className="mt-8 animate-in slide-in-from-bottom-4">
                 <div
-                  className={`relative p-6 rounded-[2.5rem] overflow-hidden shadow-xl ${
-                    searchResult.status === "Шийдвэрлэсэн"
-                      ? "bg-indigo-600"
-                      : "bg-slate-100 border border-slate-200"
-                  }`}
+                  className={`relative p-6 rounded-[2.5rem] shadow-xl ${searchResult.status === "Шийдвэрлэсэн" ? "bg-emerald-600" : "bg-slate-100 border border-slate-200"}`}
                 >
-                  <div className="relative space-y-4">
+                  <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">
-                          {searchResult.status === "Шийдвэрлэсэн" ? "👩‍🏫" : "⏳"}
-                        </span>
-                        <p
-                          className={`text-[9px] font-black uppercase tracking-widest ${searchResult.status === "Шийдвэрлэсэн" ? "text-white/80" : "text-slate-400"}`}
-                        >
-                          {searchResult.status === "Шийдвэрлэсэн"
-                            ? "Багшийн хариу:"
-                            : "Одоогийн төлөв:"}
-                        </p>
-                      </div>
+                      <p
+                        className={`text-[9px] font-black uppercase tracking-widest ${searchResult.status === "Шийдвэрлэсэн" ? "text-white/80" : "text-slate-400"}`}
+                      >
+                        {searchResult.status === "Шийдвэрлэсэн"
+                          ? "Багшийн хариу:"
+                          : "Төлөв:"}
+                      </p>
                       <span
                         className={`px-2 py-1 rounded-md text-[8px] font-black uppercase ${searchResult.status === "Шийдвэрлэсэн" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-500"}`}
                       >
-                        {searchResult.status || "Шинэ"}
+                        {searchResult.status}
                       </span>
                     </div>
 
                     <div
-                      className={`${searchResult.status === "Шийдвэрлэсэн" ? "bg-white/15" : "bg-white"} p-5 rounded-2xl border ${searchResult.status === "Шийдвэрлэсэн" ? "border-white/10" : "border-slate-100"}`}
+                      className={`p-5 rounded-2xl ${searchResult.status === "Шийдвэрлэсэн" ? "bg-white/10 border border-white/20" : "bg-white border border-slate-100"}`}
                     >
                       <p
-                        className={`text-[12px] font-bold leading-relaxed italic ${searchResult.status === "Шийдвэрлэсэн" ? "text-white" : "text-slate-600"}`}
+                        className={`text-[13px] font-bold leading-relaxed italic ${searchResult.status === "Шийдвэрлэсэн" ? "text-white" : "text-slate-600"}`}
                       >
                         {searchResult.status === "Шийдвэрлэсэн"
-                          ? `"${searchResult.adminReply}"`
+                          ? `"${searchResult.adminReply || "Хариу бичигдээгүй байна."}"`
                           : "Багш одоогоор мэдээлэлтэй танилцаж байна. Тун удахгүй хариу өгөх болно."}
                       </p>
                     </div>
 
                     <div
-                      className={`flex justify-between items-center opacity-50 text-[8px] font-black uppercase tracking-widest pt-2 ${searchResult.status === "Шийдвэрлэсэн" ? "text-white" : "text-slate-400"}`}
+                      className={`flex justify-between items-center opacity-60 text-[8px] font-black uppercase tracking-widest pt-2 ${searchResult.status === "Шийдвэрлэсэн" ? "text-white" : "text-slate-400"}`}
                     >
-                      <span>ID: {getFormattedId(searchResult)}</span>
+                      <span>ID: {searchResult.customId}</span>
                       <span>
                         {new Date(searchResult.createdAt).toLocaleDateString()}
                       </span>
@@ -240,7 +195,6 @@ export default function Nuurhuudas() {
         </div>
       </main>
 
-      {/* FOOTER */}
       <footer className="py-12 text-center border-t border-slate-50">
         <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.5em]">
           SafeSpace Mongolia 2026
