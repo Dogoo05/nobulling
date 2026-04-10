@@ -53,7 +53,7 @@ export default function AntiBullyAdminMaster() {
     if (isLoggedIn) fetchData();
   }, [isLoggedIn]);
 
-  function formatCustomId(item) {
+  const formatCustomId = useCallback((item) => {
     if (!item) return "ID";
     const existingId = item.id || item.customId || item.SOS_ID;
     if (existingId) return existingId;
@@ -68,20 +68,22 @@ export default function AntiBullyAdminMaster() {
     return item.type === "yaraltai"
       ? `SOS-${dateStr}-${idSuffix}`
       : `${dateStr}-${idSuffix}`;
-  }
+  }, []);
 
   const stats = useMemo(() => {
     const total = data.length;
-    const sosCount = data.filter((d) =>
-      formatCustomId(d).includes("SOS"),
-    ).length;
+    const sosItems = data.filter((d) => formatCustomId(d).includes("SOS"));
+    const sosCount = sosItems.length;
+    const normalCount = total - sosCount;
+    const resolved = data.filter((d) => d.status === "Шийдвэрлэсэн").length;
+    const pending = total - resolved;
+
     const female = data.filter((d) =>
       (d.answers?.[9] || "").toString().includes("Эмэгтэй"),
     ).length;
     const male = data.filter((d) =>
       (d.answers?.[9] || "").toString().includes("Эрэгтэй"),
     ).length;
-    const resolved = data.filter((d) => d.status === "Шийдвэрлэсэн").length;
 
     const forms = { biye: 0, setgel: 0, hel: 0, tsahim: 0 };
     data.forEach((d) => {
@@ -94,6 +96,10 @@ export default function AntiBullyAdminMaster() {
 
     return {
       total,
+      sosCount,
+      normalCount,
+      resolved,
+      pending,
       typeItems: [
         {
           label: "Яаралтай",
@@ -103,7 +109,7 @@ export default function AntiBullyAdminMaster() {
         },
         {
           label: "Ердийн",
-          count: total - sosCount,
+          count: normalCount,
           stroke: "stroke-indigo-400",
           bg: "bg-indigo-400",
         },
@@ -157,21 +163,28 @@ export default function AntiBullyAdminMaster() {
         },
         {
           label: "Шинэ",
-          count: total - resolved,
+          count: pending,
           stroke: "stroke-orange-400",
           bg: "bg-orange-400",
         },
       ],
     };
-  }, [data]);
+  }, [data, formatCustomId]);
 
   const filteredData = useMemo(() => {
     return data
       .filter((item) => {
         const customId = formatCustomId(item);
-        const itemTypeLabel = customId.includes("SOS") ? "Яаралтай" : "Асуулга";
+        // Төрөл шалгах логик: SOS орсон бол Яаралтай, үгүй бол Асуулга
+        const isSos = customId.includes("SOS");
+        const itemTypeLabel = isSos ? "Яаралтай" : "Асуулга";
+
         const itemStatus = item.status || "Шинэ";
-        const itemForm = (item.answers?.[1] || "").toString();
+        const itemForm = (
+          item.answers?.[1] ||
+          item.answers?.["1"] ||
+          ""
+        ).toString();
 
         const matchSearch =
           searchTerm === "" ||
@@ -185,7 +198,7 @@ export default function AntiBullyAdminMaster() {
         return matchSearch && matchType && matchStatus && matchForm;
       })
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [data, filterType, filterStatus, filterForm, searchTerm]);
+  }, [data, filterType, filterStatus, filterForm, searchTerm, formatCustomId]);
 
   const handleUpdateStatus = async () => {
     if (
@@ -257,6 +270,7 @@ export default function AntiBullyAdminMaster() {
     <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-6 font-sans text-slate-900">
       {toast.show && <Toast msg={toast.message} type={toast.type} />}
       <div className="max-w-[1400px] mx-auto space-y-6">
+        {/* Header */}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-600 p-2 rounded-xl text-white font-black italic">
@@ -283,15 +297,45 @@ export default function AntiBullyAdminMaster() {
         </div>
 
         {activeTab === "manager" ? (
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col lg:flex-row items-center gap-4 lg:gap-8">
-              <input
-                type="text"
-                placeholder="ID Хайх..."
-                className="bg-slate-50 border border-slate-100 rounded-2xl py-2 px-6 text-xs font-bold outline-none focus:border-indigo-500 w-full lg:w-64 transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+          <div className="space-y-6">
+            {/* Тоон Статистик (Cards) */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard
+                label="Нийт"
+                value={stats.total}
+                color="text-indigo-600"
               />
+              <StatCard
+                label="Яаралтай (SOS)"
+                value={stats.sosCount}
+                color="text-red-500"
+              />
+              <StatCard
+                label="Шийдвэрлэсэн"
+                value={stats.resolved}
+                color="text-emerald-500"
+              />
+              <StatCard
+                label="Хүлээгдэж буй"
+                value={stats.pending}
+                color="text-orange-500"
+              />
+            </div>
+
+            {/* Шүүлтүүр */}
+            <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col lg:flex-row items-center gap-4 lg:gap-8">
+              <div className="relative w-full lg:w-64">
+                <input
+                  type="text"
+                  placeholder="ID Хайх..."
+                  className="bg-slate-50 border border-slate-100 rounded-2xl py-2 pl-10 pr-6 text-xs font-bold outline-none focus:border-indigo-500 w-full transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                  🔍
+                </span>
+              </div>
               <div className="flex flex-wrap items-center justify-center gap-4 w-full lg:w-auto">
                 <FilterSelect
                   label="Төрөл"
@@ -319,6 +363,8 @@ export default function AntiBullyAdminMaster() {
                 />
               </div>
             </div>
+
+            {/* Хүснэгт */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-x-auto">
               <table className="w-full text-center min-w-[800px]">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
@@ -340,53 +386,63 @@ export default function AntiBullyAdminMaster() {
                         Ачаалж байна...
                       </td>
                     </tr>
-                  ) : (
-                    filteredData.map((item) => (
-                      <tr
-                        key={item._id}
-                        className="hover:bg-slate-50 cursor-pointer transition-all group"
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setReplyText(item.adminReply || "");
-                        }}
+                  ) : filteredData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        className="py-20 text-xs font-black text-slate-300"
                       >
-                        <td
-                          className={`px-6 py-4 font-mono font-black text-[11px] ${formatCustomId(item).includes("SOS") ? "text-red-500" : "text-slate-600"}`}
+                        Илэрц олдсонгүй
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map((item) => {
+                      const cId = formatCustomId(item);
+                      return (
+                        <tr
+                          key={item._id}
+                          className="hover:bg-slate-50 cursor-pointer transition-all group"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setReplyText(item.adminReply || "");
+                          }}
                         >
-                          {formatCustomId(item)}
-                        </td>
-                        <td className="px-4 py-4 text-[9px] font-black uppercase">
-                          <span
-                            className={
-                              formatCustomId(item).includes("SOS")
-                                ? "bg-red-50 text-red-500 px-3 py-1 rounded-lg"
-                                : "bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg"
-                            }
+                          <td
+                            className={`px-6 py-4 font-mono font-black text-[11px] ${cId.includes("SOS") ? "text-red-500" : "text-slate-600"}`}
                           >
-                            {formatCustomId(item).includes("SOS")
-                              ? "SOS"
-                              : "АСУУЛГА"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-[10px] font-bold text-slate-500">
-                          {formatCustomId(item).includes("SOS")
-                            ? "Маш хүнд"
-                            : item.answers?.[3] || "Дунд"}
-                        </td>
-                        <td className="px-6 py-4 text-left">
-                          <div className="max-w-[300px] text-[11px] text-slate-400 truncate italic group-hover:text-slate-600 transition-colors">
-                            "
-                            {item.description ||
-                              item.answers?.[2] ||
-                              "Тайлбар байхгүй"}
-                            "
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={item.status} />
-                        </td>
-                      </tr>
-                    ))
+                            {cId}
+                          </td>
+                          <td className="px-4 py-4 text-[9px] font-black uppercase">
+                            <span
+                              className={
+                                cId.includes("SOS")
+                                  ? "bg-red-50 text-red-500 px-3 py-1 rounded-lg"
+                                  : "bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg"
+                              }
+                            >
+                              {cId.includes("SOS") ? "SOS" : "АСУУЛГА"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-[10px] font-bold text-slate-500">
+                            {cId.includes("SOS")
+                              ? "Маш хүнд"
+                              : item.answers?.[3] || "Дунд"}
+                          </td>
+                          <td className="px-6 py-4 text-left">
+                            <div className="max-w-[300px] text-[11px] text-slate-400 truncate italic group-hover:text-slate-600 transition-colors">
+                              "
+                              {item.description ||
+                                item.answers?.[2] ||
+                                "Тайлбар байхгүй"}
+                              "
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <StatusBadge status={item.status} />
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -402,10 +458,11 @@ export default function AntiBullyAdminMaster() {
         )}
       </div>
 
+      {/* Detail Modal */}
       {selectedItem && (
         <div className="fixed inset-0 bg-indigo-950/50 backdrop-blur-md z-[100] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div className="bg-white w-full max-w-6xl rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row max-h-[95vh] md:max-h-[90vh] overflow-hidden animate-in zoom-in duration-300">
-            <div className="flex-1 p-6 md:p-10 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 p-6 md:p-10 overflow-y-auto">
               <div className="flex justify-between items-center mb-6 border-b pb-4 border-slate-100">
                 <h2 className="text-xl md:text-2xl font-black text-indigo-900 italic">
                   {formatCustomId(selectedItem)}
@@ -497,6 +554,18 @@ export default function AntiBullyAdminMaster() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Дээд талын жижиг картууд
+function StatCard({ label, value, color }) {
+  return (
+    <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center">
+      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+        {label}
+      </span>
+      <span className={`text-xl font-black ${color}`}>{value}</span>
     </div>
   );
 }
