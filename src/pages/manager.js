@@ -660,7 +660,7 @@ function FilterSelect({ label, value, options, onChange }) {
       >
         {options.map((o) => (
           <option key={o} value={o}>
-            {o}
+            {o}``
           </option>
         ))}
       </select>
